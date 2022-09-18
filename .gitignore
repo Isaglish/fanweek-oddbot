@@ -1,0 +1,9 @@
+.env
+assets
+
+config.py
+modals.py
+
+# python generated
+__pycache__
+*.pyc
