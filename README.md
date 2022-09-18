@@ -51,4 +51,8 @@ If you find any bugs, issues, or unexpected behaviour while using the bot, you s
     
 ## Links
 - **License:** [MIT](https://github.com/Isaglish/fanweek-oddbot/blob/main/LICENSE)
-- **Repository:** [GitHub](https://github.com/Isaglish/fanweek-oddbot)
+<<<<<<< HEAD
+- **Repository**: [GitHub](https://github.com/Isaglish/fanweek-oddbot)
+=======
+- **Repository**: [GitHub](https://github.com/Isaglish/fanweek-oddbot)
+>>>>>>> e1100a9469c67625dbb37973696a4def33679b16
