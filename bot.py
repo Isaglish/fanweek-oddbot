@@ -23,10 +23,10 @@ SOFTWARE.
 """
 
 import logging
+from pathlib import Path
 
 import humanize
 import discord
-from pathlib import Path
 from discord.ext import commands
 from discord import app_commands
 
@@ -101,3 +101,10 @@ class Bot(commands.Bot):
 
     async def on_disconnect(self):
         self.log.critical("Bot has disconnected!")
+
+
+    # ungrouped commands
+    @commands.command()
+    async def source(self, ctx: commands.Context):
+        """Returns the source code link to Odd Bot."""
+        await ctx.send("https://github.com/Isaglish/oddbot")
