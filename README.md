@@ -30,7 +30,7 @@ Parameters inside `[default: value]` are optional.
     
         > Removes your submission from the database.
         >
-        > You need Manage Server permission to unsubmit another `[member]`'s submission.
+        > You need Manage Server permission to unsubmit another member's submission.
     
     - **`/submissions show [member: None] [all: False]`**
     
