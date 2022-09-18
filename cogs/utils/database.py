@@ -1,3 +1,10 @@
+"""
+Just an extension to make coding a little easier for handling MongoDB databases.
+
+:copyright: (c) 2022 Isaglish
+:license: MIT, see LICENSE for more details.
+"""
+
 from pymongo import MongoClient
 
 from .config import Config

@@ -1,3 +1,10 @@
+"""
+Main feature of Odd Bot, keeps track of submissions.
+
+:copyright: (c) 2022 Isaglish
+:license: MIT, see LICENSE for more details.
+"""
+
 import discord
 from discord import app_commands
 from discord.ext import commands

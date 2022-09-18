@@ -1,3 +1,10 @@
+"""
+Classes for discord views.
+
+:copyright: (c) 2022 Isaglish
+:license: MIT, see LICENSE for more details.
+"""
+
 import discord
 
 
