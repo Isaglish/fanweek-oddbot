@@ -1,3 +1,10 @@
+"""
+Helper methods for submissions.py
+
+:copyright: (c) 2022 Isaglish
+:license: MIT, see LICENSE for more details.
+"""
+
 import discord
 import aiohttp
 from bs4 import BeautifulSoup
