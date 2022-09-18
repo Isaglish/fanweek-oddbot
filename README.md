@@ -1,8 +1,8 @@
 # Odd Bot
 [![GitHub](https://img.shields.io/github/license/Isaglish/oddbot)](https://github.com/Isaglish/oddbot/blob/main/LICENSE)
 [![GitHub last commit (branch)](https://img.shields.io/github/last-commit/Isaglish/oddbot/main)](https://github.com/Isaglish/oddbot/commits)
+[![GitHub issues](https://img.shields.io/github/issues-raw/Isaglish/oddbot)](https://github.com/Isaglish/oddbot/issues)
 [![Discord](https://img.shields.io/discord/758487559399145524?color=%235865F2&label=discord&logo=discord&logoColor=white)](https://discord.gg/XRTQbZJ)
-[![Twitter Follow](https://img.shields.io/twitter/follow/NotIsaglish?color=green&logo=twitter&logoColor=%231D9BF0&style=social)](https://twitter.com/NotIsaglish)
 
 A personal project made for the Fanweek event discord server.
 
@@ -40,12 +40,15 @@ Parameters inside `[default: value]` are optional.
     >
     > Shows `[all]` (everyone)'s submissions
     
-### Context Menus
+- ### Context Menus
 
-- **Report User**
+    - **Report User**
 
     > Sends you a form to fill out for reporting.
+
+## Issues
+If you find any bugs, issues, or unexpected behaviour while using the bot, you should open an issue with details of the problem and how to reproduce if possible. Please also open an issue for any new features or commands you would like to see added.
     
-    
-## License
-[MIT](https://github.com/Isaglish/oddbot/blob/main/LICENSE)
+## Links
+- **License:** [MIT](https://github.com/Isaglish/oddbot/blob/main/LICENSE)
+- **Repository** [GitHub](https://github.com/Isaglish/oddbot)
