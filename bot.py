@@ -68,6 +68,8 @@ class Bot(commands.Bot):
         )
         self.tree.add_command(self.report_user_ctx_menu)
 
+        self.add_command(source)
+
 
     # context menus
     async def report_user(self, interaction: discord.Interaction, member: discord.Member):
@@ -103,8 +105,8 @@ class Bot(commands.Bot):
         self.log.critical("Bot has disconnected!")
 
 
-    # ungrouped commands
-    @commands.command()
-    async def source(self, ctx: commands.Context):
-        """Returns the source code link to Odd Bot."""
-        await ctx.send("https://github.com/Isaglish/oddbot")
+# ungrouped commands
+@commands.command()
+async def source(ctx: commands.Context):
+    """Returns the source code link to Odd Bot."""
+    await ctx.send("https://github.com/Isaglish/oddbot")
