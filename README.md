@@ -1,6 +1,8 @@
 # Odd Bot
 [![GitHub](https://img.shields.io/github/license/Isaglish/oddbot)](https://github.com/Isaglish/oddbot/blob/main/LICENSE)
 [![GitHub last commit (branch)](https://img.shields.io/github/last-commit/Isaglish/oddbot/main)](https://github.com/Isaglish/oddbot/commits)
+[![Discord](https://img.shields.io/discord/758487559399145524?color=%235865F2&label=discord&logo=discord&logoColor=white)](https://discord.gg/XRTQbZJ)
+[![Twitter Follow](https://img.shields.io/twitter/follow/NotIsaglish?color=green&logo=twitter&logoColor=%231D9BF0&style=social)](https://twitter.com/NotIsaglish)
 
 A personal project made for the Fanweek event discord server.
 
