@@ -1,5 +1,5 @@
 # Odd Bot
-[![GitHub](https://img.shields.io/github/license/Isaglish/fanweek-oddbot)](https://github.com/Isaglish/fanweek-oddbot/blob/main/LICENSE)
+[![GitHub](https://img.shields.io/github/license/Isaglish/fanweek-oddbot?style=flat-square)](https://github.com/Isaglish/fanweek-oddbot/blob/main/LICENSE)
 [![GitHub last commit (branch)](https://img.shields.io/github/last-commit/Isaglish/fanweek-oddbot/main)](https://github.com/Isaglish/fanweek-oddbot/commits)
 [![GitHub issues](https://img.shields.io/github/issues-raw/Isaglish/fanweek-oddbot)](https://github.com/Isaglish/fanweek-oddbot/issues)
 [![Discord](https://img.shields.io/discord/758487559399145524?color=%235865F2&label=discord&logo=discord&logoColor=white)](https://discord.gg/XRTQbZJ)
