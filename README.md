@@ -22,29 +22,29 @@ Parameters inside `[default: value]` are optional.
 - ### Submissions
     - **`/submissions submit <link> [member: None]`**
     
-    > Saves your submission into the database.
-    >
-    > You need Manage Server permission to submit for `[member]`.
+        > Saves your submission into the database.
+        >
+        > You need Manage Server permission to submit for `[member]`.
     
     - **`/submissions unsubmit <link>`**
     
-    > Removes your submission from the database.
-    >
-    > You need Manage Server permission to unsubmit another `[member]`'s submission.
+        > Removes your submission from the database.
+        >
+        > You need Manage Server permission to unsubmit another `[member]`'s submission.
     
     - **`/submissions show [member: None] [all: False]`**
     
-    > Shows all of your submissions
-    >
-    > Shows all of `[member]`'s submissions
-    >
-    > Shows `[all]` (everyone)'s submissions
+        > Shows all of your submissions
+        >
+        > Shows all of `[member]`'s submissions
+        >
+        > Shows `[all]` (everyone)'s submissions
     
 - ### Context Menus
 
     - **Report User**
 
-    > Sends you a form to fill out for reporting.
+        > Sends you a form to fill out for reporting.
 
 ## Issues
 If you find any bugs, issues, or unexpected behaviour while using the bot, you should open an issue with details of the problem and how to reproduce if possible. Please also open an issue for any new features or commands you would like to see added.
