@@ -208,6 +208,7 @@ class Submission(commands.Cog):
 
         query = self.db.find(post)
         query = [q for q in query]
+        query.sort(key=lambda x: x["author_id"])
 
         if not query:
             await self.helper.send_error_message(interaction, no_submission_text)
