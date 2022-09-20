@@ -120,7 +120,7 @@ class Submission(commands.Cog):
         if game_exists and game_attrs["title"] == "Fancade":  # has an image but no title
             user_id = interaction.user.id if member is None else member.id
             author = await interaction.guild.fetch_member(user_id)
-            game_attrs["title"] = f"ULG?!{author}!?"
+            game_attrs["title"] = f"?ULG#{author.discriminator}?"
 
         elif not game_exists and game_attrs["title"] == "Fancade":  # has no image and no title
             await self.helper.send_error_message(
@@ -223,8 +223,26 @@ class Submission(commands.Cog):
         interaction: discord.Interaction,
         current: str
     ) -> list[app_commands.Choice[str]]:
-        results = self.db.find({"title": {"$regex": current}, "guild_id": interaction.guild.id, "author_id": interaction.user.id})
-        return [app_commands.Choice(name=result["title"], value=result["link"]) for result in results]
+
+        if interaction.user.guild_permissions.manage_guild:
+            post = {"title": {"$regex": current}, "guild_id": interaction.guild.id}
+            results = self.db.find(post)
+            results = list(results)
+            results.sort(key= lambda x: x["author_id"])
+            return [
+                app_commands.Choice(
+                    name=f"{result['title']} by {await interaction.guild.fetch_member(result['author_id'])}",
+                    value=result["link"]
+                ) for result in results
+            ]
+        else:
+            post = {"title": {"$regex": current}, "guild_id": interaction.guild.id, "author_id": interaction.user.id}
+            results = self.db.find(post)
+            results = list(results)
+            results.sort(key= lambda x: x["author_id"])
+            return [
+                app_commands.Choice(name=result['title'], value=result["link"]) for result in results
+            ]
 
 
     @submissions_group.command(name="show", description="Shows your (or another person's) submissions.")
