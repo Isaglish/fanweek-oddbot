@@ -50,7 +50,7 @@ Parameters inside `[default: value]` are optional.
 
 ### Context Menus
 
-![](assets/context-menu.gif)
+![](assets/markdown/context-menu.gif)
 
 | Name        | Description                                 |
 | ----------- | ------------------------------------------- |
