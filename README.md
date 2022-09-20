@@ -13,6 +13,12 @@ However, this source is provided to give you an idea on how I created Odd Bot an
 
 ## Features
 
+### Text Commands
+
+- **`ob.source`**
+
+    > Returns the link to this repository
+
 ### Slash Commands
 
 Parameters inside `<>` are required.
@@ -34,21 +40,21 @@ Parameters inside `[default: value]` are optional.
     
     - **`/submissions show [member: None] [all: False]`**
     
-        > Shows all of your submissions
+        > Shows all of your submissions.
         >
-        > Shows all of `[member]`'s submissions
+        > Shows all of `[member]`'s submissions.
         >
-        > `[all]` shows everyone's submissions
+        > `[all]` shows everyone's submissions.
 
     - **`/submissions clear [member: None] [all: False]`**
 
-        > Clears all of your submissions
+        > Clears all of your submissions.
         >
-        > You need Manage Server permission to clear another member's submissions
+        > You need Manage Server permission to clear another member's submissions.
         >
-        > Clears all of `[member]`'s submissions
+        > Clears all of `[member]`'s submissions.
         >
-        > `[all]` clears everyone's submissions
+        > `[all]` clears everyone's submissions.
     
 - ### Context Menus
 
