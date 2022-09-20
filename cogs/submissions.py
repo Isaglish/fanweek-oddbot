@@ -8,6 +8,7 @@ Main feature of Odd Bot, keeps track of submissions.
 import discord
 from discord import app_commands
 from discord.ext import commands
+import re
 
 from .utils.database import Database
 from .utils.views import Confirm, EmbedPaginator
@@ -73,7 +74,7 @@ class Submission(commands.Cog):
     )
     async def submit_command(self, interaction: discord.Interaction, link: str, member: discord.Member = None):
 
-        if not link.startswith("https://play.fancade.com/"):
+        if not re.match("https://play.fancade.com/[0-9A-Z]{16}", link):
             await self.helper.send_error_message(interaction, "Sorry, but I don't recognize that link.")
             return None
 
@@ -88,11 +89,6 @@ class Submission(commands.Cog):
         if query is not None:
             author = await interaction.guild.fetch_member(query["author_id"])
             await self.helper.send_error_message(interaction, f"Sorry, but the game **{query['title']}** has already been submitted by **{author}**.")
-            return None
-
-        game_identifier_len = 16
-        if len(link[25:]) > game_identifier_len or len(link[25:]) < game_identifier_len:
-            await self.helper.send_error_message(interaction, "Sorry, but I can't find that game.")
             return None
 
         if game_attrs["title"] == "Fancade":
@@ -139,7 +135,7 @@ class Submission(commands.Cog):
     @app_commands.describe(link="Your game's link, you can get this by sharing your game in Fancade.")
     async def unsubmit_command(self, interaction: discord.Interaction, link: str):
 
-        if not link.startswith("https://play.fancade.com/"):
+        if not re.match("https://play.fancade.com/[0-9A-Z]{16}", link):
             await self.helper.send_error_message(interaction, "Sorry, but I don't recognize that link.")
             return None
 
