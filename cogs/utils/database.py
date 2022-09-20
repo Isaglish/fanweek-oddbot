@@ -40,3 +40,7 @@ class Database:
 
     def delete_one(self, post: dict):
         self.collection.delete_one(post)
+
+    
+    def delete_many(self, post: dict):
+        self.collection.delete_many(post)
