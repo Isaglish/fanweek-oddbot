@@ -38,7 +38,17 @@ Parameters inside `[default: value]` are optional.
         >
         > Shows all of `[member]`'s submissions
         >
-        > Shows `[all]` (everyone)'s submissions
+        > `[all]` shows everyone's submissions
+
+    - **`/submissions clear [member: None] [all: False]`**
+
+        > Clears all of your submissions
+        >
+        > You need Manage Server permission to clear another member's submissions
+        >
+        > Clears all of `[member]`'s submissions
+        >
+        > `[all]` clears everyone's submissions
     
 - ### Context Menus
 
