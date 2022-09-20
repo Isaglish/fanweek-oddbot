@@ -2,7 +2,6 @@
 assets
 
 config.py
-modals.py
 
 # python generated
 __pycache__
