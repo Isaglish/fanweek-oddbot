@@ -94,6 +94,12 @@ class Submission(commands.Cog):
 
         if game_attrs["title"] == "Fancade":
             await self.helper.send_error_message(interaction, "Hmm, either that game hasn't been processed yet or it doesn't exist.")
+
+        game_exists = await self.helper.check_game_exists(game_identifier)
+        if game_exists:
+            game_attrs["title"] = "??UNLISTED_GAME??"
+        else:
+            await self.helper.send_error_message(interaction, "Hmm, either that game doesn't exist or it hasn't been processed yet.")
             return None
 
         if member is None or member == interaction.user:
