@@ -27,6 +27,22 @@ class SubmissionHelper:
 
 
     @staticmethod
+    async def check_game_exists(id: str):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"https://www.fancade.com/images/{id}.jpg") as response:
+                try:
+                    r = await response.text()
+                    doc = BeautifulSoup(r, "html.parser")
+                    page_not_found = doc.find("h1").text
+
+                    if page_not_found == "Page Not Found":
+                        return False
+                        
+                except UnicodeDecodeError:
+                    return True
+
+
+    @staticmethod
     async def send_error_message(interaction: discord.Interaction, message: str):
         embed = discord.Embed(color=discord.Color.red(), description=message)
         embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
