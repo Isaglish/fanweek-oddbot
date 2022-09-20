@@ -16,7 +16,7 @@ However, this source is provided to give you an idea on how I created Odd Bot an
 - [Features](#features)
     - [Text Commands](#text-commands)
     - [Slash Commands](#slash-commands)
-        1. [Submissions](#submissions)
+        - [Submissions](#submissions)
     - [Context Menus](#context-menus)
 - [Issues](#issues)
 - [Links](#links)
