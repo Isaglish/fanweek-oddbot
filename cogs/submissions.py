@@ -9,6 +9,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import re
+from typing import List
 
 from .utils.database import Database
 from .utils.views import Confirm, EmbedPaginator
@@ -173,6 +174,10 @@ class Submission(commands.Cog):
 
             await self.handle_unsubmit_confirm_view(interaction, view, {"guild_id": interaction.guild.id, "link": link}, query)
 
+    @unsubmit_command.autocomplete('link')
+    async def unsubmit_autocomplete(self, interaction: discord.Interaction, input: str) -> List[app_commands.Choice[str]]:
+        results = self.db.find({"title": {"$regex" : input}})
+        return [discord.app_commands.Choice(name=result["title"], value=result["link"]) for result in results]
 
     @submissions_group.command(name="show", description="Shows your (or another person's) submissions.")
     @app_commands.describe(
