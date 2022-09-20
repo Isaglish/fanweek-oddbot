@@ -228,7 +228,7 @@ class Submission(commands.Cog):
             post = {"title": {"$regex": current}, "guild_id": interaction.guild.id}
             results = self.db.find(post)
             results = list(results)
-            results.sort(key= lambda x: x["author_id"])
+            results.sort(key=lambda x: x["author_id"])
             return [
                 app_commands.Choice(
                     name=f"{result['title']} by {await interaction.guild.fetch_member(result['author_id'])}",
@@ -239,7 +239,7 @@ class Submission(commands.Cog):
             post = {"title": {"$regex": current}, "guild_id": interaction.guild.id, "author_id": interaction.user.id}
             results = self.db.find(post)
             results = list(results)
-            results.sort(key= lambda x: x["author_id"])
+            results.sort(key=lambda x: x["author_id"])
             return [
                 app_commands.Choice(name=result['title'], value=result["link"]) for result in results
             ]
