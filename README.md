@@ -11,6 +11,16 @@ I don't intend on making Odd Bot a public bot that can be used by anyone as I do
 
 However, this source is provided to give you an idea on how I created Odd Bot and probably help you on developing your own.
 
+## Table of Contents
+
+- [Features](#features)
+    - [Text Commands](#text-commands)
+    - [Slash Commands](#slash-commands)
+        1. [Submissions](#submissions)
+    - [Context Menus](#context-menus)
+- [Issues](#issues)
+- [Links](#links)
+
 ## Features
 
 ### Text Commands
@@ -18,6 +28,10 @@ However, this source is provided to give you an idea on how I created Odd Bot an
 - **`ob.source`**
 
     > Returns the link to this repository
+
+- **`ob.help`**
+
+    > Returns a link to the Features section of this README
 
 ### Slash Commands
 
