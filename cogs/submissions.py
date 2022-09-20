@@ -117,12 +117,12 @@ class Submission(commands.Cog):
             return None
 
         game_exists = await self.helper.check_game_exists(game_identifier)
-        if game_exists and game_attrs["title"] == "Fancade":
+        if game_exists and game_attrs["title"] == "Fancade":  # has an image but no title
             user_id = interaction.user.id if member is None else member.id
             author = await interaction.guild.fetch_member(user_id)
             game_attrs["title"] = f"ULG?!{author}!?"
 
-        elif not game_exists and game_attrs["title"] != "Fancade":
+        elif not game_exists and game_attrs["title"] == "Fancade":  # has no image and no title
             await self.helper.send_error_message(
                 interaction,
                 "Hmm, either that game doesn't exist or it hasn't been processed yet."
