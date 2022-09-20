@@ -72,9 +72,9 @@ Parameters inside `[default: value]` are optional.
     
 ### Context Menus
 
-    - **Report User**
+- **Report User**
 
-        > Sends you a form to fill out for reporting.
+    > Sends you a form to fill out for reporting.
 
 ## Issues
 If you find any bugs, issues, or unexpected behaviour while using the bot, you should open an issue with details of the problem and how to reproduce if possible. Please also open an issue for any new features or commands you would like to see added.
