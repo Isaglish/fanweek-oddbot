@@ -56,8 +56,9 @@ class Bot(commands.Bot):
         super().__init__(
             command_prefix=self.cmd_prefix,
             owner_ids=Config.OWNER_IDS,
-            activity=discord.Activity(type=discord.ActivityType.playing, name="with new features."),
-            intents=discord.Intents.all()
+            activity=discord.Activity(type=discord.ActivityType.playing, name="github.com/Isaglish/fanweek-oddbot | ob.help"),
+            intents=discord.Intents.all(),
+            help_command=None
         )
 
         # context menus
@@ -69,6 +70,7 @@ class Bot(commands.Bot):
         self.tree.add_command(self.report_user_ctx_menu)
 
         self.add_command(source)
+        self.add_command(help)
 
 
     # context menus
@@ -109,4 +111,10 @@ class Bot(commands.Bot):
 @commands.command()
 async def source(ctx: commands.Context):
     """Returns the source code link to Odd Bot."""
-    await ctx.send("https://github.com/Isaglish/oddbot")
+    await ctx.send("https://github.com/Isaglish/fanweek-oddbot")
+
+
+@commands.command()
+async def help(ctx: commands.Context):
+    """Returns a link to the list of features the bot has."""
+    await ctx.send("Here's the list of features:\nhttps://github.com/Isaglish/fanweek-oddbot#features")
