@@ -70,7 +70,7 @@ Parameters inside `[default: value]` are optional.
         >
         > `[all]` clears everyone's submissions.
     
-- ### Context Menus
+### Context Menus
 
     - **Report User**
 
