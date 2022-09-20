@@ -1,7 +1,10 @@
+# danger
 .env
+config.py
+
+
 assets/others
 
-config.py
 
 # python generated
 __pycache__
