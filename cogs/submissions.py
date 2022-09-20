@@ -117,9 +117,12 @@ class Submission(commands.Cog):
             return None
 
         game_exists = await self.helper.check_game_exists(game_identifier)
-        if game_exists:
-            game_attrs["title"] = "??UNLISTED_GAME??"
-        else:
+        if game_exists and game_attrs["title"] == "Fancade":
+            user_id = interaction.user.id if member is None else member.id
+            author = await interaction.guild.fetch_member(user_id)
+            game_attrs["title"] = f"ULG?!{author}!?"
+
+        elif not game_exists and game_attrs["title"] != "Fancade":
             await self.helper.send_error_message(
                 interaction,
                 "Hmm, either that game doesn't exist or it hasn't been processed yet."
@@ -212,6 +215,16 @@ class Submission(commands.Cog):
             await interaction.response.send_message(embed=embed, view=view)
 
             await self.handle_unsubmit_confirm_view(interaction, view, {"guild_id": interaction.guild.id, "link": link}, query)
+
+
+    @unsubmit_command.autocomplete("link")
+    async def unsubmit_autocomplete(
+        self,
+        interaction: discord.Interaction,
+        current: str
+    ) -> list[app_commands.Choice[str]]:
+        results = self.db.find({"title": {"$regex": current}, "guild_id": interaction.guild.id, "author_id": interaction.user.id})
+        return [app_commands.Choice(name=result["title"], value=result["link"]) for result in results]
 
 
     @submissions_group.command(name="show", description="Shows your (or another person's) submissions.")
