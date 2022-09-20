@@ -36,11 +36,12 @@ class Confirm(discord.ui.View):
 
 
 class EmbedPaginator(discord.ui.View):
-    def __init__(self, interaction: discord.Interaction, embeds: list):
+    def __init__(self, interaction: discord.Interaction, embeds: list, query: list):
         super().__init__(timeout=None)
         self.interaction = interaction
         self.author = interaction.user
         self.embeds = embeds
+        self.query = query
 
         self.current_page = 0
         self.max_pages = len(embeds)
@@ -53,7 +54,7 @@ class EmbedPaginator(discord.ui.View):
         self.current_page -= 1
         
         embed = self.embeds[self.current_page]
-        embed.set_footer(text=f"Page {self.current_page + 1}/{self.max_pages}")
+        embed.set_footer(text=f"Page {self.current_page + 1}/{self.max_pages} • Total amount of submissions: {len(self.query)}")
         await interaction.response.edit_message(embed=embed, view=self)
 
 
@@ -64,7 +65,7 @@ class EmbedPaginator(discord.ui.View):
         self.current_page += 1
 
         embed = self.embeds[self.current_page]
-        embed.set_footer(text=f"Page {self.current_page + 1}/{self.max_pages}")
+        embed.set_footer(text=f"Page {self.current_page + 1}/{self.max_pages} • Total amount of submissions: {len(self.query)}")
         await interaction.response.edit_message(embed=embed, view=self)
 
 
