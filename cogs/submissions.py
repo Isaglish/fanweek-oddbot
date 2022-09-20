@@ -35,7 +35,7 @@ class Submission(commands.Cog):
             await interaction.edit_original_response(embed=embed)
 
         elif view.value:
-            embed = discord.Embed(color=discord.Color.blue(), description=f"{self.bot.config.LOADING} Removing submission...")
+            embed = discord.Embed(color=discord.Color.blue(), description=f"{self.bot.config.LOADING} Deleting submission...")
             embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
             await interaction.edit_original_response(embed=embed, view=None)
 
@@ -46,7 +46,7 @@ class Submission(commands.Cog):
             await interaction.edit_original_response(embed=embed, view=None)
 
         else:
-            embed = discord.Embed(color=discord.Color.blue(), description="Command has been cancelled.")
+            embed = discord.Embed(color=discord.Color.red(), description="Command has been cancelled.")
             embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
             await interaction.edit_original_response(embed=embed, view=None)
 
@@ -202,37 +202,101 @@ class Submission(commands.Cog):
             show_all = False
             user = member
 
-        embed = discord.Embed(color=discord.Color.blue(), description=f"{self.bot.config.LOADING} Loading submissions...")
-        embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
-        await interaction.response.send_message(embed=embed)
-
         query = self.db.find(post)
-        query = [q for q in query]
+        query = list(query)
         query.sort(key=lambda x: x["author_id"])
 
         if not query:
             await self.helper.send_error_message(interaction, no_submission_text)
             return None
 
+        embed = discord.Embed(color=discord.Color.blue(), description=f"{self.bot.config.LOADING} Loading submissions...")
+        embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
+        await interaction.response.send_message(embed=embed)
+
         embeds = await self.helper.create_submissions_embed(interaction, query, user, show_all)
-        paginator = EmbedPaginator(interaction, embeds)
+        paginator = EmbedPaginator(interaction, embeds, query)
 
         if paginator.max_pages > 1:
             paginator.next.disabled = False
 
         embed = embeds[0]
-        embed.set_footer(text=f"Page {paginator.current_page + 1}/{paginator.max_pages}")
+        embed.set_footer(text=f"Page {paginator.current_page + 1}/{paginator.max_pages} • Total amount of submissions: {len(query)}")
         await interaction.edit_original_response(embed=embed, view=paginator)
             
 
-    # @submissions_group.command(name="clear", description="Clears your (or another person's) submissions.")
-    # @app_commands.describe(
-    #     member="The member you want to clear the submissions of. This requires Manage Server permission.",
-    #     all="This will clear everyone's submissions. This requires Manage Server permission."
-    # )
-    # async def clear_submissions_command(self, interaction: discord.Interaction, member: discord.Member, all: bool = False):
-    #     pass
+    @submissions_group.command(name="clear", description="Clears your (or another person's) submissions.")
+    @app_commands.describe(
+        member="The member you want to clear the submissions of. This requires Manage Server permission.",
+        all="This will clear everyone's submissions. This requires Manage Server permission."
+    )
+    async def clear_submissions_command(self, interaction: discord.Interaction, member: discord.Member = None, all: bool = False):
+        can_manage_guild = interaction.user.guild_permissions.manage_guild
 
+        if all:
+            post = {"guild_id": interaction.guild.id}
+            no_submission_text = "Hmm, it seems like nobody has submitted anything yet."
+            success_text = "All submissions have been deleted."
+            confirm_text = "This will delete everyone's submissions. Are you sure you wanna proceed?"
+
+            if not can_manage_guild:
+                await self.helper.send_error_message(interaction, "Sorry, but you are missing `Manage Server` permission.")
+                return None
+
+        elif member is None or member == interaction.user:
+            post = {"guild_id": interaction.guild.id, "author_id": interaction.user.id}
+            no_submission_text = "You haven't submitted anything yet."
+            success_text = "Deleted all of your submissions."
+            confirm_text = "This will delete all of your submissions. Are you sure you wanna proceed?"
+
+        elif member is not None or member != interaction.user:
+            post = {"guild_id": interaction.guild.id, "author_id": member.id}
+            no_submission_text = f"**{member}** hasn't submitted anything yet."
+            success_text = f"Deleted all of **{member}**'s submissions."
+            confirm_text = f"This will delete all of **{member}**'s submissions. Are you sure you wanna proceed?"
+
+            if not can_manage_guild:
+                await self.helper.send_error_message(interaction, "Sorry, but you are missing `Manage Server` permission.")
+                return None
+
+        query = self.db.find(post)
+        query = list(query)
+        if not query:
+            await self.helper.send_error_message(interaction, no_submission_text)
+            return None
+
+        view = Confirm(interaction.user)
+
+        embed = discord.Embed(
+            color=discord.Color.orange(),
+            description=confirm_text
+        )
+        embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
+        await interaction.response.send_message(embed=embed, view=view)
+
+        await view.wait()
+        if view.value is None:
+            embed = discord.Embed(color=discord.Color.red(), description="You took too long to respond.")
+            embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
+            await interaction.edit_original_response(embed=embed)
+
+        elif view.value:
+            embed = discord.Embed(color=discord.Color.blue(), description=f"{self.bot.config.LOADING} Deleting submissions...")
+            embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
+            await interaction.edit_original_response(embed=embed, view=None)
+
+            self.db.delete_many(post)
+
+            embed.description = success_text
+            embed.color = discord.Color.green()
+            embed.set_footer(text=f"Deleted {len(query)} submissions.")
+            await interaction.edit_original_response(embed=embed, view=None)
+
+        else:
+            embed = discord.Embed(color=discord.Color.red(), description="Command has been cancelled.")
+            embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
+            await interaction.edit_original_response(embed=embed, view=None)
+        
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Submission(bot), guilds=[bot.config.TEST_GUILD_ID])
