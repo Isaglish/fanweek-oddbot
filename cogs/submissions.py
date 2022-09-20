@@ -5,6 +5,8 @@ Main feature of Odd Bot, keeps track of submissions.
 :license: MIT, see LICENSE for more details.
 """
 
+from typing import Optional, Any
+
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -16,7 +18,7 @@ from .helper import SubmissionHelper
 
 class Submission(commands.Cog):
 
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
         self.log = bot.log
         self.db = Database("fanweek", "submissions")
@@ -27,7 +29,14 @@ class Submission(commands.Cog):
     submissions_group = app_commands.Group(name="submissions", description="Commands related to submissions.")
 
 
-    async def handle_unsubmit_confirm_view(self, interaction: discord.Interaction, view: discord.ui.View, post: dict, query: dict):
+    async def handle_unsubmit_confirm_view(
+        self,
+        interaction: discord.Interaction,
+        view: discord.ui.View,
+        post: dict[str, Any],
+        query: dict[str, Any]
+    ) -> None:
+
         await view.wait()
         if view.value is None:
             embed = discord.Embed(color=discord.Color.red(), description="You took too long to respond.")
@@ -52,12 +61,12 @@ class Submission(commands.Cog):
 
 
     @commands.Cog.listener()
-    async def on_ready(self):
+    async def on_ready(self) -> None:
         self.log.info(f"{self.__class__.__name__.lower()} module is ready.")
 
 
     @commands.command()
-    async def sync(self, ctx: commands.Context):
+    async def sync(self, ctx: commands.Context) -> None:
         """Syncs all app commands to the server"""
         if ctx.author.id not in self.bot.config.OWNER_IDS:
             return None
@@ -71,7 +80,12 @@ class Submission(commands.Cog):
         link="Your game's link, you can get this by sharing your game in Fancade.",
         member="The member you want to submit for. This requires Manage Server permission."
     )
-    async def submit_command(self, interaction: discord.Interaction, link: str, member: discord.Member = None):
+    async def submit_command(
+        self,
+        interaction: discord.Interaction,
+        link: str,
+        member: Optional[discord.Member] = None
+    ) -> None:
 
         if not link.startswith("https://play.fancade.com/"):
             await self.helper.send_error_message(interaction, "Sorry, but I don't recognize that link.")
@@ -82,12 +96,18 @@ class Submission(commands.Cog):
         game_attrs = await self.helper.get_game_attrs(link)
 
         if not can_manage_guild and member != interaction.user and member is not None:
-            await self.helper.send_error_message(interaction, "Sorry, you can't submit for another member since you're missing `Manage Server` permission.")
+            await self.helper.send_error_message(
+                interaction,
+                "Sorry, you can't submit for another member since you're missing `Manage Server` permission."
+            )
             return None
 
         if query is not None:
             author = await interaction.guild.fetch_member(query["author_id"])
-            await self.helper.send_error_message(interaction, f"Sorry, but the game **{query['title']}** has already been submitted by **{author}**.")
+            await self.helper.send_error_message(
+                interaction,
+                f"Sorry, but the game **{query['title']}** has already been submitted by **{author}**."
+            )
             return None
 
         game_identifier_len = 16
@@ -100,11 +120,17 @@ class Submission(commands.Cog):
         if game_exists:
             game_attrs["title"] = "??UNLISTED_GAME??"
         else:
-            await self.helper.send_error_message(interaction, "Hmm, either that game doesn't exist or it hasn't been processed yet.")
+            await self.helper.send_error_message(
+                interaction,
+                "Hmm, either that game doesn't exist or it hasn't been processed yet."
+            )
             return None
 
         if member is None or member == interaction.user:
-            embed = discord.Embed(color=discord.Color.blue(), description=f"{self.bot.config.LOADING} Processing submission...")
+            embed = discord.Embed(
+                color=discord.Color.blue(),
+                description=f"{self.bot.config.LOADING} Processing submission..."
+            )
             embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
             await interaction.response.send_message(embed=embed)
 
@@ -121,7 +147,10 @@ class Submission(commands.Cog):
             await interaction.edit_original_response(embed=embed)
 
         elif member is not None or member != interaction.user:
-            embed = discord.Embed(color=discord.Color.blue(), description=f"{self.bot.config.LOADING} Processing submission...")
+            embed = discord.Embed(
+                color=discord.Color.blue(),
+                description=f"{self.bot.config.LOADING} Processing submission..."
+            )
             embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
             await interaction.response.send_message(embed=embed)
 
@@ -141,7 +170,7 @@ class Submission(commands.Cog):
 
     @submissions_group.command(name="unsubmit", description="Unsubmits your game from the database")
     @app_commands.describe(link="Your game's link, you can get this by sharing your game in Fancade.")
-    async def unsubmit_command(self, interaction: discord.Interaction, link: str):
+    async def unsubmit_command(self, interaction: discord.Interaction, link: str) -> None:
 
         if not link.startswith("https://play.fancade.com/"):
             await self.helper.send_error_message(interaction, "Sorry, but I don't recognize that link.")
@@ -159,7 +188,10 @@ class Submission(commands.Cog):
 
         if author.id != interaction.user.id:
             if not can_manage_guild:
-                await self.helper.send_error_message(interaction, "Sorry, but you can't unsubmit another member's submission since you're missing `Manage Server` permission.")
+                await self.helper.send_error_message(
+                    interaction,
+                    "Sorry, but you can't unsubmit another member's submission since you're missing `Manage Server` permission."
+                )
                 return None
 
             embed = discord.Embed(
@@ -187,7 +219,13 @@ class Submission(commands.Cog):
         member="The member you want to show the submissions of.",
         all="This will show everyone's submissions."
     )
-    async def show_submissions_command(self, interaction: discord.Interaction, member: discord.Member = None, all: bool = False):
+    async def show_submissions_command(
+        self,
+        interaction: discord.Interaction,
+        member: Optional[discord.Member] = None,
+        all: bool = False
+    ) -> None:
+
         if all:
             post = {"guild_id": interaction.guild.id}
             no_submission_text = "Hmm, it seems like nobody has submitted anything yet."
@@ -214,7 +252,10 @@ class Submission(commands.Cog):
             await self.helper.send_error_message(interaction, no_submission_text)
             return None
 
-        embed = discord.Embed(color=discord.Color.blue(), description=f"{self.bot.config.LOADING} Loading submissions...")
+        embed = discord.Embed(
+            color=discord.Color.blue(),
+            description=f"{self.bot.config.LOADING} Loading submissions..."
+        )
         embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
         await interaction.response.send_message(embed=embed)
 
@@ -225,7 +266,9 @@ class Submission(commands.Cog):
             paginator.next.disabled = False
 
         embed = embeds[0]
-        embed.set_footer(text=f"Page {paginator.current_page + 1}/{paginator.max_pages} • Total amount of submissions: {len(query)}")
+        embed.set_footer(
+            text=f"Page {paginator.current_page + 1}/{paginator.max_pages} • Total amount of submissions: {len(query)}"
+        )
         await interaction.edit_original_response(embed=embed, view=paginator)
             
 
@@ -234,7 +277,13 @@ class Submission(commands.Cog):
         member="The member you want to clear the submissions of. This requires Manage Server permission.",
         all="This will clear everyone's submissions. This requires Manage Server permission."
     )
-    async def clear_submissions_command(self, interaction: discord.Interaction, member: discord.Member = None, all: bool = False):
+    async def clear_submissions_command(
+        self,
+        interaction: discord.Interaction,
+        member: Optional[discord.Member] = None,
+        all: bool = False
+    ) -> None:
+
         can_manage_guild = interaction.user.guild_permissions.manage_guild
 
         if all:
@@ -302,5 +351,5 @@ class Submission(commands.Cog):
             await interaction.edit_original_response(embed=embed, view=None)
         
 
-async def setup(bot: commands.Bot):
+async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Submission(bot), guilds=[bot.config.TEST_GUILD_ID])

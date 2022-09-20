@@ -5,6 +5,8 @@ Helper methods for submissions.py
 :license: MIT, see LICENSE for more details.
 """
 
+from typing import Optional, Any
+
 import discord
 import aiohttp
 from bs4 import BeautifulSoup
@@ -13,7 +15,7 @@ from bs4 import BeautifulSoup
 class SubmissionHelper:
 
     @staticmethod
-    async def get_game_attrs(link: str):
+    async def get_game_attrs(link: str) -> dict[str, Any]:
         async with aiohttp.ClientSession() as session:
             async with session.get(link) as response:
                 r = await response.text()
@@ -27,7 +29,7 @@ class SubmissionHelper:
 
 
     @staticmethod
-    async def check_game_exists(id: str):
+    async def check_game_exists(id: str) -> bool:
         async with aiohttp.ClientSession() as session:
             async with session.get(f"https://www.fancade.com/images/{id}.jpg") as response:
                 try:
@@ -37,13 +39,13 @@ class SubmissionHelper:
 
                     if page_not_found == "Page Not Found":
                         return False
-                        
+
                 except UnicodeDecodeError:
                     return True
 
 
     @staticmethod
-    async def send_error_message(interaction: discord.Interaction, message: str):
+    async def send_error_message(interaction: discord.Interaction, message: str) -> None:
         embed = discord.Embed(color=discord.Color.red(), description=message)
         embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
         try:
@@ -53,7 +55,12 @@ class SubmissionHelper:
 
 
     @staticmethod
-    async def create_submissions_embed(interaction: discord.Interaction, query: list, member: discord.Member = None, show_all: bool = True):
+    async def create_submissions_embed(
+        interaction: discord.Interaction,
+        query: list[dict[str, Any]],
+        member: Optional[discord.Member] = None,
+        show_all: bool = True
+    ) -> list[discord.Embed]:
         embeds = []
         k = 10
         for i in range(0, len(query), 10):
@@ -77,7 +84,10 @@ class SubmissionHelper:
                 embed = discord.Embed(color=discord.Color.blue(), description=f"**Showing all submissions:**\n\n{info}")
                 embed.set_author(name=f"{interaction.guild} Submissions", icon_url=interaction.guild.icon.url)
             else:
-                embed = discord.Embed(color=discord.Color.blue(), description=f"**Showing all of {member}'s submissions:**\n\n{info}")
+                embed = discord.Embed(
+                    color=discord.Color.blue(),
+                    description=f"**Showing all of {member}'s submissions:**\n\n{info}"
+                )
                 embed.set_author(name=f"{interaction.user}", icon_url=interaction.user.avatar.url)
 
             embeds.append(embed)

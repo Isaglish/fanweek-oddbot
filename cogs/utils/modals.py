@@ -12,7 +12,7 @@ import discord
 
 class ReportUserModal(discord.ui.Modal):
 
-    def __init__(self, member: discord.Member, channel_id: discord.TextChannel, guild: discord.Guild):
+    def __init__(self, member: discord.Member, channel_id: discord.TextChannel, guild: discord.Guild) -> None:
         self.member = member
         self.channel_id = channel_id
         self.guild = guild
@@ -37,7 +37,7 @@ class ReportUserModal(discord.ui.Modal):
     )
 
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction: discord.Interaction) -> None:
         await interaction.response.send_message("Thank you for reporting! We will come back to you after reviewing the report.", ephemeral=True)
         report_channel = await self.guild.fetch_channel(self.channel_id)
 
@@ -48,7 +48,7 @@ class ReportUserModal(discord.ui.Modal):
         await report_channel.send(embed=embed)
 
 
-    async def on_error(self, interaction: discord.Interaction, error: Exception):
+    async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
         await interaction.response.send_message("Erm.. Something went wrong.", ephemeral=True)
 
         traceback.print_tb(error.__traceback__)

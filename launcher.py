@@ -1,7 +1,7 @@
 from bot import Bot
 
 
-def main():
+def main() -> None:
     bot = Bot()
     bot.run(bot.config.DISCORD_API_TOKEN)
 

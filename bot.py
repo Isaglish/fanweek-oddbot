@@ -39,7 +39,7 @@ abs_path = Path(__file__).parent.resolve()
 
 class Bot(commands.Bot):
 
-    def __init__(self):
+    def __init__(self) -> None:
 
         # bot variables
         self.uptime = discord.utils.utcnow()
@@ -56,7 +56,7 @@ class Bot(commands.Bot):
         super().__init__(
             command_prefix=self.cmd_prefix,
             owner_ids=Config.OWNER_IDS,
-            activity=discord.Activity(type=discord.ActivityType.playing, name="github.com/Isaglish/fanweek-oddbot | ob.help"),
+            activity=discord.Activity(type=discord.ActivityType.playing, name="ob.help"),
             intents=discord.Intents.all(),
             help_command=None
         )
@@ -74,7 +74,7 @@ class Bot(commands.Bot):
 
 
     # context menus
-    async def report_user(self, interaction: discord.Interaction, member: discord.Member):
+    async def report_user(self, interaction: discord.Interaction, member: discord.Member) -> None:
 
         if member == interaction.user:
             await interaction.response.send_message("Hey! You can't report yourself!", ephemeral=True)
@@ -85,7 +85,7 @@ class Bot(commands.Bot):
 
 
     # built-in events and methods
-    async def setup_hook(self):
+    async def setup_hook(self) -> None:
         for cog in self._cogs:
             await self.load_extension(f"cogs.{cog}")
             self.log.info(f"Extension '{cog}' has been loaded.")
@@ -93,28 +93,28 @@ class Bot(commands.Bot):
         await self.load_extension("jishaku")
 
 
-    async def on_connect(self):
+    async def on_connect(self) -> None:
         self.log.info(f"Connected to Client (version: {discord.__version__}).")
 
 
-    async def on_ready(self):
+    async def on_ready(self) -> None:
         self.log.info(f"Bot has connected (Guilds: {len(self.guilds)}) (Bot Username: {self.user.name}#{self.user.discriminator}) (Bot ID: {self.user.id}).")
         runtime = discord.utils.utcnow() - self.uptime
         self.log.info(f"connected after {humanize.precisedelta(runtime)}.")
 
 
-    async def on_disconnect(self):
+    async def on_disconnect(self) -> None:
         self.log.critical("Bot has disconnected!")
 
 
 # ungrouped commands
 @commands.command()
-async def source(ctx: commands.Context):
+async def source(ctx: commands.Context) -> None:
     """Returns the source code link to Odd Bot."""
     await ctx.send("https://github.com/Isaglish/fanweek-oddbot")
 
 
 @commands.command()
-async def help(ctx: commands.Context):
+async def help(ctx: commands.Context) -> None:
     """Returns a link to the list of features the bot has."""
     await ctx.send("Here's the list of features:\nhttps://github.com/Isaglish/fanweek-oddbot#features")
