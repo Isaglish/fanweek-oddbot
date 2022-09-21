@@ -58,7 +58,7 @@ Parameters inside `[default: value]` are optional.
 
 
 ## Issues
-If you find any bugs, issues, or unexpected behaviour while using the bot, you should open an issue with details of the problem and how to reproduce if possible. Please also open an issue for any new features or commands you would like to see added.
+If you find any bugs, issues, or unexpected behavior while using the bot, you should open an issue with details of the problem and how to reproduce if possible. Please also open an issue for any new features or commands you would like to see added.
     
 ## Links
 - **License:** [MIT](https://github.com/Isaglish/fanweek-oddbot/blob/main/LICENSE)
