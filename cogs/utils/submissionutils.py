@@ -114,7 +114,7 @@ async def handle_unsubmit_confirm_view(
         await interaction.edit_original_response(embed=embed)
 
     elif view.value:
-        embed = discord.Embed(color=discord.Color.blue(), description=f"{_self.bot.config.LOADING} Deleting submission...")
+        embed = discord.Embed(color=discord.Color.blue(), description=f"{_self.bot.config['loading_emoji']} Deleting submission...")
         embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
         await interaction.edit_original_response(embed=embed, view=None)
 

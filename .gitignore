@@ -1,6 +1,6 @@
 # danger
 .env
-config.py
+config.json
 
 
 assets/others

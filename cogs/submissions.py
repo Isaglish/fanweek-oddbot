@@ -40,10 +40,10 @@ class Submission(commands.Cog):
     @commands.command()
     async def sync(self, ctx: commands.Context) -> None:
         """Syncs all app commands to the server"""
-        if ctx.author.id not in self.bot.config.OWNER_IDS:
+        if ctx.author.id not in self.bot.config["owner_ids"]:
             return None
 
-        await self.bot.tree.sync(guild=self.bot.config.TEST_GUILD_ID)
+        await self.bot.tree.sync(guild=discord.Object(id=self.bot.config["test_guild_id"]))
         await ctx.send("All commands have been synced.")
 
 
@@ -103,7 +103,7 @@ class Submission(commands.Cog):
         if member is None or member == interaction.user:
             embed = discord.Embed(
                 color=discord.Color.blue(),
-                description=f"{self.bot.config.LOADING} Processing submission..."
+                description=f"{self.bot.config['loading_emoji']} Processing submission..."
             )
             embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
             await interaction.response.send_message(embed=embed)
@@ -123,7 +123,7 @@ class Submission(commands.Cog):
         elif member is not None or member != interaction.user:
             embed = discord.Embed(
                 color=discord.Color.blue(),
-                description=f"{self.bot.config.LOADING} Processing submission..."
+                description=f"{self.bot.config['loading_emoji']} Processing submission..."
             )
             embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
             await interaction.response.send_message(embed=embed)
@@ -256,7 +256,7 @@ class Submission(commands.Cog):
 
         embed = discord.Embed(
             color=discord.Color.blue(),
-            description=f"{self.bot.config.LOADING} Loading submissions..."
+            description=f"{self.bot.config['loading_emoji']} Loading submissions..."
         )
         embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
         await interaction.response.send_message(embed=embed)
@@ -336,7 +336,7 @@ class Submission(commands.Cog):
             await interaction.edit_original_response(embed=embed)
 
         elif view.value:
-            embed = discord.Embed(color=discord.Color.blue(), description=f"{self.bot.config.LOADING} Deleting submissions...")
+            embed = discord.Embed(color=discord.Color.blue(), description=f"{self.bot.config['loading_emoji']} Deleting submissions...")
             embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
             await interaction.edit_original_response(embed=embed, view=None)
 
@@ -354,4 +354,4 @@ class Submission(commands.Cog):
         
 
 async def setup(bot: commands.Bot) -> None:
-    await bot.add_cog(Submission(bot), guilds=[bot.config.TEST_GUILD_ID])
+    await bot.add_cog(Submission(bot), guilds=[discord.Object(id=bot.config["test_guild_id"])])

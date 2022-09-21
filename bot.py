@@ -23,6 +23,7 @@ SOFTWARE.
 """
 
 import logging
+import json
 from pathlib import Path
 
 import humanize
@@ -30,7 +31,6 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-from cogs.utils.config import Config
 from cogs.utils.modals import ReportUserModal
 
 
@@ -50,12 +50,12 @@ class Bot(commands.Bot):
         self.log = logging.getLogger("discord")
         self.log.setLevel(logging.INFO)
 
-        # utils
-        self.config = Config()
+        with open("config.json", "r") as f:
+            self.config = json.load(f)
 
         super().__init__(
             command_prefix=self.cmd_prefix,
-            owner_ids=Config.OWNER_IDS,
+            owner_ids=self.config["owner_ids"],
             activity=discord.Activity(type=discord.ActivityType.playing, name="ob.help"),
             intents=discord.Intents.all(),
             help_command=None
@@ -65,7 +65,7 @@ class Bot(commands.Bot):
         self.report_user_ctx_menu = app_commands.ContextMenu(
             name="Report User",
             callback=self.report_user,
-            guild_ids=[self.config.TEST_GUILD_ID.id]
+            guild_ids=[self.config["test_guild_id"]]
         )
         self.tree.add_command(self.report_user_ctx_menu)
 
@@ -80,8 +80,8 @@ class Bot(commands.Bot):
             await interaction.response.send_message("Hey! You can't report yourself!", ephemeral=True)
             return None
         
-        report_guild = discord.utils.get(self.guilds, id=self.config.REPORT_GUILD_ID)
-        await interaction.response.send_modal(ReportUserModal(member, self.config.REPORT_CHANNEL_ID, report_guild))
+        report_guild = discord.utils.get(self.guilds, id=self.config["report_guild_id"])
+        await interaction.response.send_modal(ReportUserModal(member, self.config["report_channel_id"], report_guild))
 
 
     # built-in events and methods

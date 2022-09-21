@@ -25,12 +25,12 @@ However, this source is provided to give you an idea on how I created Odd Bot an
 
 ### Text Commands
 
-| Command                    | Description                                           | Permissions |
-| -------------------------- | ----------------------------------------------------- | ----------- |
-| **`ob.source`**            | Returns the link to this repository                   | `None`      |
-| **`ob.help`**              | Returns a link to the Features section of this README | `None`      |
-| **`ob.sync `**             | Syncs all app commands to the `config.TEST_GUILD_ID`  | `Bot Owner` |
-| **`ob.jsk : ob.jishaku `** | Jishaku extension for testing and debugging.          | `Bot Owner` |
+| Command                    | Description                                             | Permissions |
+| -------------------------- | ------------------------------------------------------- | ----------- |
+| **`ob.source`**            | Returns the link to this repository                     | `None`      |
+| **`ob.help`**              | Returns a link to the Features section of this README   | `None`      |
+| **`ob.sync `**             | Syncs all app commands to the `config['test_guild_id']` | `Bot Owner` |
+| **`ob.jsk : ob.jishaku `** | Jishaku extension for testing and debugging.            | `Bot Owner` |
 
 ### Slash Commands
 

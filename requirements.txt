@@ -1,7 +1,6 @@
 discord.py==2.0.0
 aiohttp
 bs4
-python-dotenv
 pymongo
 humanize
 dnspython

@@ -5,12 +5,11 @@ Just an extension to make coding a little easier for handling MongoDB databases.
 :license: MIT, see LICENSE for more details.
 """
 
+import json
 from typing import Any
 
 import pymongo
 from pymongo import MongoClient
-
-from .config import Config
 
 
 __all__ = (
@@ -23,7 +22,11 @@ class Database:
     __slots__ = "cluster", "database", "collection"
 
     def __init__(self, database: str, collection: str) -> None:
-        self.cluster = MongoClient(Config.MONGODB_API_TOKEN)
+
+        with open("config.json", "r") as f:
+            config = json.load(f)
+
+        self.cluster = MongoClient(config["mongodb_api_token"])
         self.database = self.cluster[database]
         self.collection = self.database[collection]
 
