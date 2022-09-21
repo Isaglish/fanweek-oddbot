@@ -20,6 +20,8 @@ from .utils import submissionutils
 
 class Submission(commands.Cog):
 
+    __slots__ = "bot", "log", "db"
+
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
         self.log = bot.log

@@ -10,7 +10,14 @@ import traceback
 import discord
 
 
+__all__ = (
+    "ReportUserModal"
+)
+
+
 class ReportUserModal(discord.ui.Modal):
+
+    __slots__ = "member", "channel_id", "guild"
 
     def __init__(self, member: discord.Member, channel_id: discord.TextChannel, guild: discord.Guild) -> None:
         self.member = member

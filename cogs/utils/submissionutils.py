@@ -13,6 +13,15 @@ from bs4 import BeautifulSoup
 from discord.ext import commands
 
 
+__all__ = (
+    "get_game_attrs",
+    "check_game_exists",
+    "send_error_message",
+    "create_submissions_embed",
+    "handle_unsubmit_confirm_view"
+)
+
+
 async def get_game_attrs(link: str) -> dict[str, Any]:
     async with aiohttp.ClientSession() as session:
         async with session.get(link) as response:

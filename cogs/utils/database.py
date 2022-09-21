@@ -13,7 +13,14 @@ from pymongo import MongoClient
 from .config import Config
 
 
+__all__ = (
+    'Database',
+)
+
+
 class Database:
+
+    __slots__ = "cluster", "database", "collection"
 
     def __init__(self, database: str, collection: str) -> None:
         self.cluster = MongoClient(Config.MONGODB_API_TOKEN)

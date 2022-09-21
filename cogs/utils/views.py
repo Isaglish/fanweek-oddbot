@@ -10,7 +10,16 @@ from typing import Any
 import discord
 
 
+__all__ = (
+    "Confirm",
+    "EmbedPaginator"
+)
+
+
 class Confirm(discord.ui.View):
+
+    __slots__ = "value", "author"
+
     def __init__(self, author: discord.Member) -> None:
         super().__init__()
         self.value = None
@@ -38,6 +47,9 @@ class Confirm(discord.ui.View):
 
 
 class EmbedPaginator(discord.ui.View):
+
+    __slots__ = "interaction", "author", "embeds", "query", "current_page", "max_pages"
+
     def __init__(self, interaction: discord.Interaction, embeds: list[discord.Embed], query: list[dict[str, Any]]) -> None:
         super().__init__(timeout=None)
         self.interaction = interaction
