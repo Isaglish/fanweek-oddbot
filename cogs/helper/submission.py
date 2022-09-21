@@ -10,6 +10,7 @@ from typing import Optional, Any
 import discord
 import aiohttp
 from bs4 import BeautifulSoup
+from discord.ext import commands
 
 
 class SubmissionHelper:
@@ -93,3 +94,35 @@ class SubmissionHelper:
             embeds.append(embed)
 
         return embeds
+
+
+    @staticmethod
+    async def handle_unsubmit_confirm_view(
+        _self: commands.Cog,
+        interaction: discord.Interaction,
+        view: discord.ui.View,
+        post: dict[str, Any],
+        query: dict[str, Any]
+    ) -> None:
+
+        await view.wait()
+        if view.value is None:
+            embed = discord.Embed(color=discord.Color.red(), description="You took too long to respond.")
+            embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
+            await interaction.edit_original_response(embed=embed)
+
+        elif view.value:
+            embed = discord.Embed(color=discord.Color.blue(), description=f"{_self.bot.config.LOADING} Deleting submission...")
+            embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
+            await interaction.edit_original_response(embed=embed, view=None)
+
+            _self.db.delete_one(post)
+
+            embed.description = f"The game **{query['title']}** has been removed from the database."
+            embed.color = discord.Color.green()
+            await interaction.edit_original_response(embed=embed, view=None)
+
+        else:
+            embed = discord.Embed(color=discord.Color.red(), description="Command has been cancelled.")
+            embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
+            await interaction.edit_original_response(embed=embed, view=None)

@@ -5,7 +5,9 @@ Main feature of Odd Bot, keeps track of submissions.
 :license: MIT, see LICENSE for more details.
 """
 
-from typing import Optional, Any
+import string
+import random
+from typing import Optional
 
 import discord
 from discord import app_commands
@@ -27,37 +29,6 @@ class Submission(commands.Cog):
 
     # groups
     submissions_group = app_commands.Group(name="submissions", description="Commands related to submissions.")
-
-
-    async def handle_unsubmit_confirm_view(
-        self,
-        interaction: discord.Interaction,
-        view: discord.ui.View,
-        post: dict[str, Any],
-        query: dict[str, Any]
-    ) -> None:
-
-        await view.wait()
-        if view.value is None:
-            embed = discord.Embed(color=discord.Color.red(), description="You took too long to respond.")
-            embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
-            await interaction.edit_original_response(embed=embed)
-
-        elif view.value:
-            embed = discord.Embed(color=discord.Color.blue(), description=f"{self.bot.config.LOADING} Deleting submission...")
-            embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
-            await interaction.edit_original_response(embed=embed, view=None)
-
-            self.db.delete_one(post)
-
-            embed.description = f"The game **{query['title']}** has been removed from the database."
-            embed.color = discord.Color.green()
-            await interaction.edit_original_response(embed=embed, view=None)
-
-        else:
-            embed = discord.Embed(color=discord.Color.red(), description="Command has been cancelled.")
-            embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
-            await interaction.edit_original_response(embed=embed, view=None)
 
 
     @commands.Cog.listener()
@@ -118,9 +89,8 @@ class Submission(commands.Cog):
 
         game_exists = await self.helper.check_game_exists(game_identifier)
         if game_exists and game_attrs["title"] == "Fancade":  # has an image but no title
-            user_id = interaction.user.id if member is None else member.id
-            author = await interaction.guild.fetch_member(user_id)
-            game_attrs["title"] = f"?ULG#{author.discriminator}?"
+            identifier = "".join(random.choices(string.ascii_letters, k=6))
+            game_attrs["title"] = f"?ULG__{identifier}?"
 
         elif not game_exists and game_attrs["title"] == "Fancade":  # has no image and no title
             await self.helper.send_error_message(
@@ -204,7 +174,7 @@ class Submission(commands.Cog):
             embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
             await interaction.response.send_message(embed=embed, view=view)
 
-            await self.handle_unsubmit_confirm_view(interaction, view, {"guild_id": interaction.guild.id, "link": link}, query)
+            await self.helper.handle_unsubmit_confirm_view(self, interaction, view, {"guild_id": interaction.guild.id, "link": link}, query)
 
         if author.id == interaction.user.id:
             embed = discord.Embed(
@@ -214,7 +184,7 @@ class Submission(commands.Cog):
             embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
             await interaction.response.send_message(embed=embed, view=view)
 
-            await self.handle_unsubmit_confirm_view(interaction, view, {"guild_id": interaction.guild.id, "link": link}, query)
+            await self.helper.handle_unsubmit_confirm_view(self, interaction, view, {"guild_id": interaction.guild.id, "link": link}, query)
 
 
     @unsubmit_command.autocomplete("link")
