@@ -21,11 +21,7 @@ class Database:
 
     __slots__ = "cluster", "database", "collection"
 
-    def __init__(self, database: str, collection: str) -> None:
-
-        with open("config.json", "r") as f:
-            config = json.load(f)
-
+    def __init__(self, config: dict[str, Any], database: str, collection: str) -> None:
         self.cluster = MongoClient(config["mongodb_api_token"])
         self.database = self.cluster[database]
         self.collection = self.database[collection]

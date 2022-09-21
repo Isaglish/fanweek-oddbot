@@ -25,7 +25,7 @@ class Submission(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
         self.log = bot.log
-        self.db = Database("fanweek", "submissions")
+        self.db = Database(bot.config, "fanweek", "submissions")
 
 
     # groups
