@@ -1,5 +1,5 @@
 """
-Helper methods for submissions.py
+Utility functions for submissions.py
 
 :copyright: (c) 2022 Isaglish
 :license: MIT, see LICENSE for more details.
