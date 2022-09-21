@@ -15,7 +15,7 @@ from discord.ext import commands
 
 from .utils.database import Database
 from .utils.views import Confirm, EmbedPaginator
-from .helper import SubmissionHelper
+from .utils import submissionutils
 
 
 class Submission(commands.Cog):
@@ -24,7 +24,6 @@ class Submission(commands.Cog):
         self.bot = bot
         self.log = bot.log
         self.db = Database("fanweek", "submissions")
-        self.helper = SubmissionHelper()
 
 
     # groups
@@ -59,15 +58,15 @@ class Submission(commands.Cog):
     ) -> None:
 
         if not link.startswith("https://play.fancade.com/"):
-            await self.helper.send_error_message(interaction, "Sorry, but I don't recognize that link.")
+            await submissionutils.send_error_message(interaction, "Sorry, but I don't recognize that link.")
             return None
 
         can_manage_guild = interaction.user.guild_permissions.manage_guild
         query = self.db.find_one({"guild_id": interaction.guild_id, "link": link})
-        game_attrs = await self.helper.get_game_attrs(link)
+        game_attrs = await submissionutils.get_game_attrs(link)
 
         if not can_manage_guild and member != interaction.user and member is not None:
-            await self.helper.send_error_message(
+            await submissionutils.send_error_message(
                 interaction,
                 "Sorry, you can't submit for another member since you're missing `Manage Server` permission."
             )
@@ -75,7 +74,7 @@ class Submission(commands.Cog):
 
         if query is not None:
             author = await interaction.guild.fetch_member(query["author_id"])
-            await self.helper.send_error_message(
+            await submissionutils.send_error_message(
                 interaction,
                 f"Sorry, but the game **{query['title']}** has already been submitted by **{author}**."
             )
@@ -84,16 +83,16 @@ class Submission(commands.Cog):
         game_identifier_len = 16
         game_identifier = link[25:]
         if len(game_identifier) > game_identifier_len or len(game_identifier) < game_identifier_len:
-            await self.helper.send_error_message(interaction, "Sorry, but I can't find that game.")
+            await submissionutils.send_error_message(interaction, "Sorry, but I can't find that game.")
             return None
 
-        game_exists = await self.helper.check_game_exists(game_identifier)
+        game_exists = await submissionutils.check_game_exists(game_identifier)
         if game_exists and game_attrs["title"] == "Fancade":  # has an image but no title
             identifier = "".join(random.choices(string.ascii_letters, k=6))
             game_attrs["title"] = f"?ULG__{identifier}?"
 
         elif not game_exists and game_attrs["title"] == "Fancade":  # has no image and no title
-            await self.helper.send_error_message(
+            await submissionutils.send_error_message(
                 interaction,
                 "Hmm, either that game doesn't exist or it hasn't been processed yet."
             )
@@ -146,14 +145,14 @@ class Submission(commands.Cog):
     async def unsubmit_command(self, interaction: discord.Interaction, link: str) -> None:
 
         if not link.startswith("https://play.fancade.com/"):
-            await self.helper.send_error_message(interaction, "Sorry, but I don't recognize that link.")
+            await submissionutils.send_error_message(interaction, "Sorry, but I don't recognize that link.")
             return None
 
         can_manage_guild = interaction.user.guild_permissions.manage_guild
         query = self.db.find_one({"guild_id": interaction.guild_id, "link": link})
 
         if query is None:
-            await self.helper.send_error_message(interaction, "Sorry, but I can't find that game in the database.")
+            await submissionutils.send_error_message(interaction, "Sorry, but I can't find that game in the database.")
             return None
 
         author = await interaction.guild.fetch_member(query["author_id"])
@@ -161,7 +160,7 @@ class Submission(commands.Cog):
 
         if author.id != interaction.user.id:
             if not can_manage_guild:
-                await self.helper.send_error_message(
+                await submissionutils.send_error_message(
                     interaction,
                     "Sorry, but you can't unsubmit another member's submission since you're missing `Manage Server` permission."
                 )
@@ -174,7 +173,7 @@ class Submission(commands.Cog):
             embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
             await interaction.response.send_message(embed=embed, view=view)
 
-            await self.helper.handle_unsubmit_confirm_view(self, interaction, view, {"guild_id": interaction.guild.id, "link": link}, query)
+            await submissionutils.handle_unsubmit_confirm_view(self, interaction, view, {"guild_id": interaction.guild.id, "link": link}, query)
 
         if author.id == interaction.user.id:
             embed = discord.Embed(
@@ -184,7 +183,7 @@ class Submission(commands.Cog):
             embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
             await interaction.response.send_message(embed=embed, view=view)
 
-            await self.helper.handle_unsubmit_confirm_view(self, interaction, view, {"guild_id": interaction.guild.id, "link": link}, query)
+            await submissionutils.handle_unsubmit_confirm_view(self, interaction, view, {"guild_id": interaction.guild.id, "link": link}, query)
 
 
     @unsubmit_command.autocomplete("link")
@@ -250,7 +249,7 @@ class Submission(commands.Cog):
         query.sort(key=lambda x: x["author_id"])
 
         if not query:
-            await self.helper.send_error_message(interaction, no_submission_text)
+            await submissionutils.send_error_message(interaction, no_submission_text)
             return None
 
         embed = discord.Embed(
@@ -260,7 +259,7 @@ class Submission(commands.Cog):
         embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
         await interaction.response.send_message(embed=embed)
 
-        embeds = await self.helper.create_submissions_embed(interaction, query, user, show_all)
+        embeds = await submissionutils.create_submissions_embed(interaction, query, user, show_all)
         paginator = EmbedPaginator(interaction, embeds, query)
 
         if paginator.max_pages > 1:
@@ -294,7 +293,7 @@ class Submission(commands.Cog):
             confirm_text = "This will delete everyone's submissions. Are you sure you wanna proceed?"
 
             if not can_manage_guild:
-                await self.helper.send_error_message(interaction, "Sorry, but you are missing `Manage Server` permission.")
+                await submissionutils.send_error_message(interaction, "Sorry, but you are missing `Manage Server` permission.")
                 return None
 
         elif member is None or member == interaction.user:
@@ -310,13 +309,13 @@ class Submission(commands.Cog):
             confirm_text = f"This will delete all of **{member}**'s submissions. Are you sure you wanna proceed?"
 
             if not can_manage_guild:
-                await self.helper.send_error_message(interaction, "Sorry, but you are missing `Manage Server` permission.")
+                await submissionutils.send_error_message(interaction, "Sorry, but you are missing `Manage Server` permission.")
                 return None
 
         query = self.db.find(post)
         query = list(query)
         if not query:
-            await self.helper.send_error_message(interaction, no_submission_text)
+            await submissionutils.send_error_message(interaction, no_submission_text)
             return None
 
         view = Confirm(interaction.user)
