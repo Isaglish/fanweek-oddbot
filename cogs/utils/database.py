@@ -5,7 +5,6 @@ Just an extension to make coding a little easier for handling MongoDB databases.
 :license: MIT, see LICENSE for more details.
 """
 
-import json
 from typing import Any
 
 import pymongo
