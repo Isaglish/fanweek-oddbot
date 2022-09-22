@@ -64,7 +64,7 @@ class Submission(commands.Cog):
             return None
 
         can_manage_guild = interaction.user.guild_permissions.manage_guild
-        query = self.db.find_one({"guild_id": interaction.guild_id, "link": link})
+        document =  await self.db.find_one({"guild_id": interaction.guild_id, "link": link})
         game_attrs = await submissionutils.get_game_attrs(link)
 
         if not can_manage_guild and member != interaction.user and member is not None:
@@ -74,11 +74,11 @@ class Submission(commands.Cog):
             )
             return None
 
-        if query is not None:
-            author = await interaction.guild.fetch_member(query["author_id"])
+        if document is not None:
+            author = await interaction.guild.fetch_member(document["author_id"])
             await submissionutils.send_error_message(
                 interaction,
-                f"Sorry, but the game **{query['title']}** has already been submitted by **{author}**."
+                f"Sorry, but the game **{document['title']}** has already been submitted by **{author}**."
             )
             return None
 
@@ -114,7 +114,7 @@ class Submission(commands.Cog):
                 "title": game_attrs["title"],
                 "link": link
             }
-            self.db.insert_one(post)
+            await self.db.insert_one(post)
 
             embed.description = f"{interaction.user.mention}, your game **{game_attrs['title']}** was submitted successfully."
             embed.set_thumbnail(url=game_attrs["image_url"])
@@ -134,7 +134,7 @@ class Submission(commands.Cog):
                 "title": game_attrs["title"],
                 "link": link
             }
-            self.db.insert_one(post)
+            await self.db.insert_one(post)
 
             embed.description = f"{interaction.user.mention}, the game **{game_attrs['title']}** was submitted successfully."
             embed.set_thumbnail(url=game_attrs["image_url"])
@@ -151,13 +151,13 @@ class Submission(commands.Cog):
             return None
 
         can_manage_guild = interaction.user.guild_permissions.manage_guild
-        query = self.db.find_one({"guild_id": interaction.guild_id, "link": link})
+        document = await self.db.find_one({"guild_id": interaction.guild_id, "link": link})
 
-        if query is None:
+        if document is None:
             await submissionutils.send_error_message(interaction, "Sorry, but I can't find that game in the database.")
             return None
 
-        author = await interaction.guild.fetch_member(query["author_id"])
+        author = await interaction.guild.fetch_member(document["author_id"])
         view = Confirm(interaction.user)
 
         if author.id != interaction.user.id:
@@ -170,25 +170,25 @@ class Submission(commands.Cog):
 
             embed = discord.Embed(
                 color=discord.Color.orange(),
-                description=f"This will delete the submission **{query['title']}** which was submitted by **{author}**. Are you sure you wanna proceed?"
+                description=f"This will delete the submission **{document['title']}** which was submitted by **{author}**. Are you sure you wanna proceed?"
             )
             embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
             await interaction.response.send_message(embed=embed, view=view)
 
             await submissionutils.handle_confirm_view(
-                self, interaction, view, {"guild_id": interaction.guild.id, "link": link}, query
+                self, interaction, view, {"guild_id": interaction.guild.id, "link": link}, document
             )
 
         if author.id == interaction.user.id:
             embed = discord.Embed(
                 color=discord.Color.orange(),
-                description=f"This will delete your submission **{query['title']}**. Are you sure you wanna proceed?"
+                description=f"This will delete your submission **{document['title']}**. Are you sure you wanna proceed?"
             )
             embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
             await interaction.response.send_message(embed=embed, view=view)
 
             await submissionutils.handle_confirm_view(
-                self, interaction, view, {"guild_id": interaction.guild.id, "link": link}, query
+                self, interaction, view, {"guild_id": interaction.guild.id, "link": link}, document
             )
 
 
@@ -201,8 +201,7 @@ class Submission(commands.Cog):
 
         if interaction.user.guild_permissions.manage_guild:
             post = {"title": {"$regex": current}, "guild_id": interaction.guild.id}
-            results = self.db.find(post)
-            results = list(results)
+            results = await self.db.find(post)
             results.sort(key=lambda x: x["author_id"])
             return [
                 app_commands.Choice(
@@ -212,8 +211,7 @@ class Submission(commands.Cog):
             ]
         else:
             post = {"title": {"$regex": current}, "guild_id": interaction.guild.id, "author_id": interaction.user.id}
-            results = self.db.find(post)
-            results = list(results)
+            results = await self.db.find(post)
             results.sort(key=lambda x: x["author_id"])
             return [
                 app_commands.Choice(name=result['title'], value=result["link"]) for result in results
@@ -250,11 +248,10 @@ class Submission(commands.Cog):
             show_all = False
             user = member
 
-        query = self.db.find(post)
-        query = list(query)
-        query.sort(key=lambda x: x["author_id"])
+        documents = await self.db.find(post)
+        documents.sort(key=lambda x: x["author_id"])
 
-        if not query:
+        if not documents:
             await submissionutils.send_error_message(interaction, no_submission_message)
             return None
 
@@ -265,15 +262,15 @@ class Submission(commands.Cog):
         embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
         await interaction.response.send_message(embed=embed)
 
-        embeds = await submissionutils.create_submissions_embed(interaction, query, user, show_all)
-        paginator = EmbedPaginator(interaction, embeds, query)
+        embeds = await submissionutils.create_submissions_embed(interaction, documents, user, show_all)
+        paginator = EmbedPaginator(interaction, embeds, documents)
 
         if paginator.max_pages > 1:
             paginator.next.disabled = False
 
         embed = embeds[0]
         embed.set_footer(
-            text=f"Page {paginator.current_page + 1}/{paginator.max_pages} • Total amount of submissions: {len(query)}"
+            text=f"Page {paginator.current_page + 1}/{paginator.max_pages} • Total amount of submissions: {len(documents)}"
         )
         await interaction.edit_original_response(embed=embed, view=paginator)
             
@@ -318,9 +315,8 @@ class Submission(commands.Cog):
                 await submissionutils.send_error_message(interaction, "Sorry, but you are missing `Manage Server` permission.")
                 return None
 
-        query = self.db.find(post)
-        query = list(query)
-        if not query:
+        documents = await self.db.find(post)
+        if not documents:
             await submissionutils.send_error_message(interaction, no_submission_message)
             return None
 
@@ -334,7 +330,7 @@ class Submission(commands.Cog):
         await interaction.response.send_message(embed=embed, view=view)
 
         await submissionutils.handle_confirm_view(
-            self, interaction, view, post, query, success_message, True
+            self, interaction, view, post, documents, success_message, True
         )
         
 

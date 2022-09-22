@@ -7,8 +7,7 @@ Just an extension to make coding a little easier for handling MongoDB databases.
 
 from typing import Any
 
-import pymongo
-from pymongo import MongoClient
+import motor.motor_asyncio
 
 
 __all__ = (
@@ -18,37 +17,32 @@ __all__ = (
 
 class Database:
 
-    __slots__ = "cluster", "database", "collection"
+    __slots__ = "client", "database", "collection"
 
     def __init__(self, config: dict[str, Any], database: str, collection: str) -> None:
-        self.cluster = MongoClient(config["mongodb_api_token"])
-        self.database = self.cluster[database]
+        self.client = motor.motor_asyncio.AsyncIOMotorClient(config["mongodb_api_token"])
+        self.database = self.client[database]
         self.collection = self.database[collection]
 
 
-    def find(self, query: dict[str, Any]) -> pymongo.cursor.Cursor:
-        results = self.collection.find(query)
+    async def find(self, post: dict[str, Any]) -> list[dict[str, Any]]:
+        documents = self.collection.find(post)
+        results = [document for document in await documents.to_list(length=1000)]
         return results
 
         
-    def find_one(self, query: dict[str, Any]) -> dict[str, Any]:
-        result = self.collection.find_one(query)
+    async def find_one(self, post: dict[str, Any]) -> dict[str, Any]:
+        result = await self.collection.find_one(post)
         return result
 
 
-    def find_with_key(self, query: dict[str, Any], key: str) -> list[Any]:
-        result = self.collection.find(query)
-        results = [r[key] for r in result]
-        return results
+    async def insert_one(self, post: dict[str, Any]) -> None:
+        await self.collection.insert_one(post)
 
 
-    def insert_one(self, post: dict[str, Any]) -> None:
-        self.collection.insert_one(post)
-
-
-    def delete_one(self, post: dict[str, Any]) -> None:
-        self.collection.delete_one(post)
+    async def delete_one(self, post: dict[str, Any]) -> None:
+        await self.collection.delete_one(post)
 
     
-    def delete_many(self, post: dict[str, Any]) -> None:
-        self.collection.delete_many(post)
+    async def delete_many(self, post: dict[str, Any]) -> None:
+        await self.collection.delete_many(post)

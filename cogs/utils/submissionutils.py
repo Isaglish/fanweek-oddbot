@@ -61,14 +61,14 @@ async def send_error_message(interaction: discord.Interaction, message: str) -> 
 
 async def create_submissions_embed(
     interaction: discord.Interaction,
-    query: list[dict[str, Any]],
+    documents: list[dict[str, Any]],
     member: Optional[discord.Member] = None,
     show_all: bool = True
 ) -> list[discord.Embed]:
     embeds = []
     k = 10
-    for i in range(0, len(query), 10):
-        current = query[i:k]
+    for i in range(0, len(documents), 10):
+        current = documents[i:k]
         k += 10
 
         number = i
@@ -104,14 +104,14 @@ async def handle_confirm_view(
     interaction: discord.Interaction,
     view: discord.ui.View,
     post: dict[str, Any],
-    query: dict[str, Any],
+    documents: dict[str, Any] | list[dict[str, Any]],
     success_message: str = None,
-    many: bool = False
+    delete_many: bool = False
 ) -> None:
 
-    if not many:
+    if not delete_many:
         confirm_message = f"{_self.bot.config['loading_emoji']} Deleting submission..."
-        success_message = f"The game **{query['title']}** has been removed from the database."
+        success_message = f"The game **{documents['title']}** has been removed from the database."
     else:
         confirm_message = f"{_self.bot.config['loading_emoji']} Deleting submissions..."
         success_message = success_message
@@ -127,10 +127,11 @@ async def handle_confirm_view(
         embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
         await interaction.edit_original_response(embed=embed, view=None)
 
-        if not many:
-            _self.db.delete_one(post)
+        if not delete_many:
+            await _self.db.delete_one(post)
         else:
-            _self.db.delete_many(post)
+            await _self.db.delete_many(post)
+            embed.set_footer(text=f"Deleted a total of {len(documents)} submissions.")
 
         embed.description = success_message
         embed.color = discord.Color.green()
