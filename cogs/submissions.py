@@ -175,7 +175,9 @@ class Submission(commands.Cog):
             embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
             await interaction.response.send_message(embed=embed, view=view)
 
-            await submissionutils.handle_unsubmit_confirm_view(self, interaction, view, {"guild_id": interaction.guild.id, "link": link}, query)
+            await submissionutils.handle_confirm_view(
+                self, interaction, view, {"guild_id": interaction.guild.id, "link": link}, query
+            )
 
         if author.id == interaction.user.id:
             embed = discord.Embed(
@@ -185,7 +187,9 @@ class Submission(commands.Cog):
             embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
             await interaction.response.send_message(embed=embed, view=view)
 
-            await submissionutils.handle_unsubmit_confirm_view(self, interaction, view, {"guild_id": interaction.guild.id, "link": link}, query)
+            await submissionutils.handle_confirm_view(
+                self, interaction, view, {"guild_id": interaction.guild.id, "link": link}, query
+            )
 
 
     @unsubmit_command.autocomplete("link")
@@ -230,19 +234,19 @@ class Submission(commands.Cog):
 
         if all:
             post = {"guild_id": interaction.guild.id}
-            no_submission_text = "Hmm, it seems like nobody has submitted anything yet."
+            no_submission_message = "Hmm, it seems like nobody has submitted anything yet."
             show_all = True
             user = None
 
         elif member is None or member == interaction.user:
             post = {"guild_id": interaction.guild.id, "author_id": interaction.user.id}
-            no_submission_text = "You haven't submitted anything yet."
+            no_submission_message = "You haven't submitted anything yet."
             show_all = False
             user = interaction.user
 
         elif member is not None or member != interaction.user:
             post = {"guild_id": interaction.guild.id, "author_id": member.id}
-            no_submission_text = f"**{member}** hasn't submitted anything yet."
+            no_submission_message = f"**{member}** hasn't submitted anything yet."
             show_all = False
             user = member
 
@@ -251,7 +255,7 @@ class Submission(commands.Cog):
         query.sort(key=lambda x: x["author_id"])
 
         if not query:
-            await submissionutils.send_error_message(interaction, no_submission_text)
+            await submissionutils.send_error_message(interaction, no_submission_message)
             return None
 
         embed = discord.Embed(
@@ -290,9 +294,9 @@ class Submission(commands.Cog):
 
         if all:
             post = {"guild_id": interaction.guild.id}
-            no_submission_text = "Hmm, it seems like nobody has submitted anything yet."
-            success_text = "All submissions have been deleted."
-            confirm_text = "This will delete everyone's submissions. Are you sure you wanna proceed?"
+            no_submission_message = "Hmm, it seems like nobody has submitted anything yet."
+            success_message = "All submissions have been deleted."
+            confirm_message = "This will delete everyone's submissions. Are you sure you wanna proceed?"
 
             if not can_manage_guild:
                 await submissionutils.send_error_message(interaction, "Sorry, but you are missing `Manage Server` permission.")
@@ -300,15 +304,15 @@ class Submission(commands.Cog):
 
         elif member is None or member == interaction.user:
             post = {"guild_id": interaction.guild.id, "author_id": interaction.user.id}
-            no_submission_text = "You haven't submitted anything yet."
-            success_text = "Deleted all of your submissions."
-            confirm_text = "This will delete all of your submissions. Are you sure you wanna proceed?"
+            no_submission_message = "You haven't submitted anything yet."
+            success_message = "Deleted all of your submissions."
+            confirm_message = "This will delete all of your submissions. Are you sure you wanna proceed?"
 
         elif member is not None or member != interaction.user:
             post = {"guild_id": interaction.guild.id, "author_id": member.id}
-            no_submission_text = f"**{member}** hasn't submitted anything yet."
-            success_text = f"Deleted all of **{member}**'s submissions."
-            confirm_text = f"This will delete all of **{member}**'s submissions. Are you sure you wanna proceed?"
+            no_submission_message = f"**{member}** hasn't submitted anything yet."
+            success_message = f"Deleted all of **{member}**'s submissions."
+            confirm_message = f"This will delete all of **{member}**'s submissions. Are you sure you wanna proceed?"
 
             if not can_manage_guild:
                 await submissionutils.send_error_message(interaction, "Sorry, but you are missing `Manage Server` permission.")
@@ -317,40 +321,21 @@ class Submission(commands.Cog):
         query = self.db.find(post)
         query = list(query)
         if not query:
-            await submissionutils.send_error_message(interaction, no_submission_text)
+            await submissionutils.send_error_message(interaction, no_submission_message)
             return None
 
         view = Confirm(interaction.user)
 
         embed = discord.Embed(
             color=discord.Color.orange(),
-            description=confirm_text
+            description=confirm_message
         )
         embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
         await interaction.response.send_message(embed=embed, view=view)
 
-        await view.wait()
-        if view.value is None:
-            embed = discord.Embed(color=discord.Color.red(), description="You took too long to respond.")
-            embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
-            await interaction.edit_original_response(embed=embed)
-
-        elif view.value:
-            embed = discord.Embed(color=discord.Color.blue(), description=f"{self.bot.config['loading_emoji']} Deleting submissions...")
-            embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
-            await interaction.edit_original_response(embed=embed, view=None)
-
-            self.db.delete_many(post)
-
-            embed.description = success_text
-            embed.color = discord.Color.green()
-            embed.set_footer(text=f"Deleted {len(query)} submissions.")
-            await interaction.edit_original_response(embed=embed, view=None)
-
-        else:
-            embed = discord.Embed(color=discord.Color.red(), description="Command has been cancelled.")
-            embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
-            await interaction.edit_original_response(embed=embed, view=None)
+        await submissionutils.handle_confirm_view(
+            self, interaction, view, post, query, success_message, True
+        )
         
 
 async def setup(bot: commands.Bot) -> None:

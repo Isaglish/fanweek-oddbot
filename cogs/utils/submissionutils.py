@@ -99,13 +99,22 @@ async def create_submissions_embed(
     return embeds
 
 
-async def handle_unsubmit_confirm_view(
+async def handle_confirm_view(
     _self: commands.Cog,
     interaction: discord.Interaction,
     view: discord.ui.View,
     post: dict[str, Any],
-    query: dict[str, Any]
+    query: dict[str, Any],
+    success_message: str = None,
+    many: bool = False
 ) -> None:
+
+    if not many:
+        confirm_message = f"{_self.bot.config['loading_emoji']} Deleting submission..."
+        success_message = f"The game **{query['title']}** has been removed from the database."
+    else:
+        confirm_message = f"{_self.bot.config['loading_emoji']} Deleting submissions..."
+        success_message = success_message
 
     await view.wait()
     if view.value is None:
@@ -114,13 +123,16 @@ async def handle_unsubmit_confirm_view(
         await interaction.edit_original_response(embed=embed)
 
     elif view.value:
-        embed = discord.Embed(color=discord.Color.blue(), description=f"{_self.bot.config['loading_emoji']} Deleting submission...")
+        embed = discord.Embed(color=discord.Color.blue(), description=confirm_message)
         embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
         await interaction.edit_original_response(embed=embed, view=None)
 
-        _self.db.delete_one(post)
+        if not many:
+            _self.db.delete_one(post)
+        else:
+            _self.db.delete_many(post)
 
-        embed.description = f"The game **{query['title']}** has been removed from the database."
+        embed.description = success_message
         embed.color = discord.Color.green()
         await interaction.edit_original_response(embed=embed, view=None)
 
