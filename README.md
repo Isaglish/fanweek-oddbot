@@ -29,7 +29,7 @@ However, this source is provided to give you an idea on how I created Odd Bot an
 | Command                    | Description                                           | Permissions |
 | -------------------------- | ----------------------------------------------------- | ----------- |
 | **`ob.help`**              | Returns a link to the Features section of this README | `None`      |
-| **`ob.sync <option>`**     | Syncs app commands.                                   | `Bot Owner` |
+| **`ob.sync [option: None]`**     | Syncs app commands.                                   | `Bot Owner` |
 | **`ob.jsk : ob.jishaku `** | Jishaku extension for testing and debugging.          | `Bot Owner` |
 
 ### Slash Commands
@@ -49,9 +49,9 @@ Parameters inside `[default: value]` are optional.
 
 #### Uncategorized
 
-| Command                            | Description                                      | Permissions |
-| ---------------------------------- | ------------------------------------------------ | ----------- |
-| **`/getsource [file_name: None]`** | Gets the source of the file and sends it to you. | `None`      |
+| Command                      | Description                                      | Permissions |
+| ---------------------------- | ------------------------------------------------ | ----------- |
+| **`/getsource <file_name>`** | Gets the source of the file and sends it to you. | `None`      |
 
 
 ### Context Menus
