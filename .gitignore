@@ -1,11 +1,6 @@
-# danger
-.env
-config.json
-
-
-assets/others
-
-
-# python generated
 __pycache__
 *.pyc
+*.json
+*.png
+*.jpg
+assets/*.gif
