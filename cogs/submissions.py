@@ -37,16 +37,6 @@ class Submission(commands.Cog):
         self.log.info(f"{self.__class__.__name__.lower()} module is ready.")
 
 
-    @commands.command()
-    async def sync(self, ctx: commands.Context) -> None:
-        """Syncs all app commands to the server"""
-        if ctx.author.id not in self.bot.config["owner_ids"]:
-            return None
-
-        await self.bot.tree.sync(guild=discord.Object(id=self.bot.config["test_guild_id"]))
-        await ctx.send("All commands have been synced.")
-
-
     @submissions_group.command(name="submit", description="Submits your game to the database")
     @app_commands.describe(
         link="Your game's link, you can get this by sharing your game in Fancade.",
@@ -341,4 +331,4 @@ class Submission(commands.Cog):
         
 
 async def setup(bot: commands.Bot) -> None:
-    await bot.add_cog(Submission(bot), guilds=[discord.Object(id=bot.config["test_guild_id"])])
+    await bot.add_cog(Submission(bot))

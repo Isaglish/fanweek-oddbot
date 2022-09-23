@@ -25,7 +25,7 @@ SOFTWARE.
 import logging
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import humanize
 import discord
@@ -64,13 +64,13 @@ class Bot(commands.Bot):
         # context menus
         self.report_user_ctx_menu = app_commands.ContextMenu(
             name="Report User",
-            callback=self.report_user,
-            guild_ids=[self.config["test_guild_id"]]
+            callback=self.report_user
         )
         self.tree.add_command(self.report_user_ctx_menu)
 
         self.add_command(source)
         self.add_command(help)
+        self.add_command(sync)
 
 
     def load_config(self) -> dict[str, Any]:
@@ -125,3 +125,22 @@ async def source(ctx: commands.Context) -> None:
 async def help(ctx: commands.Context) -> None:
     """Returns a link to the list of features the bot has."""
     await ctx.send("Here's the list of features:\nhttps://github.com/Isaglish/fanweek-oddbot#features")
+
+
+@commands.is_owner()
+@commands.command()
+async def sync(ctx: commands.Context, option: Literal["~", "*", "^"]) -> None:
+    """Syncs all app commands to the server"""
+    if option == "~":
+        synced = await ctx.bot.tree.sync(guild=ctx.guild)
+
+    elif option == "*":
+        ctx.bot.tree.copy_global_to(guild=ctx.guild)
+        synced = await ctx.bot.tree.sync(guild=ctx.guild)
+
+    elif option == "^":
+        ctx.bot.tree.clear_commands(guild=ctx.guild)
+        await ctx.bot.tree.sync(guild=ctx.guild)
+        synced = []
+
+    await ctx.send(f"Synced {len(synced)} commands to the current guild.")
