@@ -9,7 +9,7 @@ import traceback
 
 import discord
 
-from cogs.utils import create_embed_with_author
+from cogs.utils.funcutils.embedutils import create_embed_with_author
 
 
 __all__ = (

@@ -16,7 +16,7 @@ from discord.ext import commands
 
 from .utils.database import Database
 from .utils.views import Confirm, EmbedPaginator
-from .utils import submissionutils
+from .utils.funcutils import submissionutils, embedutils
 
 
 class Submission(commands.Cog):
@@ -52,7 +52,7 @@ class Submission(commands.Cog):
     ) -> None:
 
         if not link.startswith("https://play.fancade.com/"):
-            await submissionutils.send_error_embed(interaction, "Sorry, but I don't recognize that link.")
+            await embedutils.send_error_embed(interaction, "Sorry, but I don't recognize that link.")
             return None
 
         can_manage_guild = interaction.user.guild_permissions.manage_guild
@@ -60,7 +60,7 @@ class Submission(commands.Cog):
         game_attrs = await submissionutils.get_game_attrs(link)
 
         if not can_manage_guild and member != interaction.user and member is not None:
-            await submissionutils.send_error_embed(
+            await embedutils.send_error_embed(
                 interaction,
                 "Sorry, you can't submit for another member since you're missing `Manage Server` permission."
             )
@@ -68,7 +68,7 @@ class Submission(commands.Cog):
 
         if document is not None:
             author = await interaction.guild.fetch_member(document["author_id"])
-            await submissionutils.send_error_embed(
+            await embedutils.send_error_embed(
                 interaction,
                 f"Sorry, but the game **{document['title']}** has already been submitted by **{author}**."
             )
@@ -77,7 +77,7 @@ class Submission(commands.Cog):
         game_identifier_len = 16
         game_identifier = link[25:]
         if len(game_identifier) > game_identifier_len or len(game_identifier) < game_identifier_len:
-            await submissionutils.send_error_embed(interaction, "Sorry, but I can't find that game.")
+            await embedutils.send_error_embed(interaction, "Sorry, but I can't find that game.")
             return None
 
         game_exists = await submissionutils.check_game_exists(game_identifier)
@@ -86,14 +86,14 @@ class Submission(commands.Cog):
             game_attrs["title"] = f"?ULG__{identifier}?"
 
         elif not game_exists and game_attrs["title"] == "Fancade":  # has no image and no title
-            await submissionutils.send_error_embed(
+            await embedutils.send_error_embed(
                 interaction,
                 "Hmm, either that game doesn't exist or it hasn't been processed yet."
             )
             return None
 
         if member is None or member == interaction.user:
-            embed = submissionutils.create_embed_with_author(
+            embed = embedutils.create_embed_with_author(
                 discord.Color.blue(),
                 f"{self.bot.config['loading_emoji']} Processing submission...",
                 interaction.user,
@@ -114,7 +114,7 @@ class Submission(commands.Cog):
             await interaction.edit_original_response(embed=embed)
 
         elif member is not None or member != interaction.user:
-            embed = submissionutils.create_embed_with_author(
+            embed = embedutils.create_embed_with_author(
                 discord.Color.blue(),
                 f"{self.bot.config['loading_emoji']} Processing submission...",
                 interaction.user,
@@ -141,14 +141,14 @@ class Submission(commands.Cog):
     async def unsubmit_command(self, interaction: discord.Interaction, link: str) -> None:
 
         if not link.startswith("https://play.fancade.com/"):
-            await submissionutils.send_error_embed(interaction, "Sorry, but I don't recognize that link.")
+            await embedutils.send_error_embed(interaction, "Sorry, but I don't recognize that link.")
             return None
 
         can_manage_guild = interaction.user.guild_permissions.manage_guild
         document = await self.db.find_one({"guild_id": interaction.guild_id, "link": link})
 
         if document is None:
-            await submissionutils.send_error_embed(interaction, "Sorry, but I can't find that game in the database.")
+            await embedutils.send_error_embed(interaction, "Sorry, but I can't find that game in the database.")
             return None
 
         author = await interaction.guild.fetch_member(document["author_id"])
@@ -156,13 +156,13 @@ class Submission(commands.Cog):
 
         if author.id != interaction.user.id:
             if not can_manage_guild:
-                await submissionutils.send_error_embed(
+                await embedutils.send_error_embed(
                     interaction,
                     "Sorry, but you can't unsubmit another member's submission since you're missing `Manage Server` permission."
                 )
                 return None
 
-            embed = submissionutils.create_embed_with_author(
+            embed = embedutils.create_embed_with_author(
                 discord.Color.orange(),
                 f"This will delete the submission **{document['title']}** which was submitted by **{author}**. Are you sure you wanna proceed?",
                 interaction.user,
@@ -175,7 +175,7 @@ class Submission(commands.Cog):
             )
 
         if author.id == interaction.user.id:
-            embed = submissionutils.create_embed_with_author(
+            embed = embedutils.create_embed_with_author(
                 discord.Color.orange(),
                 f"This will delete your submission **{document['title']}**. Are you sure you wanna proceed?",
                 interaction.user,
@@ -248,10 +248,10 @@ class Submission(commands.Cog):
         documents.sort(key=lambda x: x["author_id"])
 
         if not documents:
-            await submissionutils.send_error_embed(interaction, no_submission_message)
+            await embedutils.send_error_embed(interaction, no_submission_message)
             return None
 
-        embed = submissionutils.create_embed_with_author(
+        embed = embedutils.create_embed_with_author(
             discord.Color.blue(),
             f"{self.bot.config['loading_emoji']} Loading submissions...",
             interaction.user,
@@ -294,7 +294,7 @@ class Submission(commands.Cog):
             confirm_message = "This will delete everyone's submissions. Are you sure you wanna proceed?"
 
             if not can_manage_guild:
-                await submissionutils.send_error_embed(interaction, "Sorry, but you are missing `Manage Server` permission.")
+                await embedutils.send_error_embed(interaction, "Sorry, but you are missing `Manage Server` permission.")
                 return None
 
         elif member is None or member == interaction.user:
@@ -310,17 +310,17 @@ class Submission(commands.Cog):
             confirm_message = f"This will delete all of **{member}**'s submissions. Are you sure you wanna proceed?"
 
             if not can_manage_guild:
-                await submissionutils.send_error_embed(interaction, "Sorry, but you are missing `Manage Server` permission.")
+                await embedutils.send_error_embed(interaction, "Sorry, but you are missing `Manage Server` permission.")
                 return None
 
         documents = await self.db.find(post)
         if not documents:
-            await submissionutils.send_error_embed(interaction, no_submission_message)
+            await embedutils.send_error_embed(interaction, no_submission_message)
             return None
 
         view = Confirm(interaction.user)
 
-        embed = submissionutils.create_embed_with_author(
+        embed = embedutils.create_embed_with_author(
             discord.Color.orange(),
             confirm_message,
             interaction.user,
@@ -337,7 +337,7 @@ class Submission(commands.Cog):
     @app_commands.describe(file_name="The name of the file you want to get the source of.")
     async def get_source(self, interaction: discord.Interaction, file_name: str) -> None:
         if not file_name in self.open_source_files:
-            await submissionutils.send_error_embed(interaction, "Sorry, but you either can't access that file or it doesn't exist.")
+            await embedutils.send_error_embed(interaction, "Sorry, but you either can't access that file or it doesn't exist.")
             return None
 
         with open(file_name, "r") as f:

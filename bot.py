@@ -138,4 +138,4 @@ async def sync(ctx: commands.Context, option: Optional[Literal["~", "*", "^"]] =
     else:
         synced = await ctx.bot.tree.sync()
 
-    await ctx.send(f"Synced {len(synced)} commands to the current guild.")
+    await ctx.send(f"Synced {len(synced)} commands {'globally.' if option is None else 'to the current guild.'}")
