@@ -128,7 +128,7 @@ async def handle_confirm_view(
     view: discord.ui.View,
     post: dict[str, Any],
     documents: dict[str, Any] | list[dict[str, Any]],
-    success_message: str = None,
+    success_message: Optional[str] = None,
     delete_many: bool = False
 ) -> None:
 
