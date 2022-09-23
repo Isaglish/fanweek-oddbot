@@ -27,7 +27,6 @@ import json
 from pathlib import Path
 from typing import Any, Literal
 
-import humanize
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -107,7 +106,7 @@ class Bot(commands.Bot):
     async def on_ready(self) -> None:
         self.log.info(f"Bot has connected (Guilds: {len(self.guilds)}) (Bot Username: {self.user.name}#{self.user.discriminator}) (Bot ID: {self.user.id}).")
         runtime = discord.utils.utcnow() - self.uptime
-        self.log.info(f"connected after {humanize.precisedelta(runtime)}.")
+        self.log.info(f"connected after {runtime.total_seconds():.2f} seconds.")
 
 
     async def on_disconnect(self) -> None:
