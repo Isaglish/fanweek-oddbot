@@ -169,7 +169,7 @@ class Submission(commands.Cog):
             await interaction.response.send_message(embed=embed, view=view)
 
             await submissionutils.handle_confirm_view(
-                self, interaction, view, {"guild_id": interaction.guild.id, "link": link}, document
+                self.bot.config, self.db, interaction, view, {"guild_id": interaction.guild.id, "link": link}, document
             )
 
         if author.id == interaction.user.id:
@@ -182,7 +182,7 @@ class Submission(commands.Cog):
             await interaction.response.send_message(embed=embed, view=view)
 
             await submissionutils.handle_confirm_view(
-                self, interaction, view, {"guild_id": interaction.guild.id, "link": link}, document
+                self.bot.config, self.db, interaction, view, {"guild_id": interaction.guild.id, "link": link}, document
             )
 
 
@@ -326,7 +326,7 @@ class Submission(commands.Cog):
         await interaction.response.send_message(embed=embed, view=view)
 
         await submissionutils.handle_confirm_view(
-            self, interaction, view, post, documents, success_message, True
+            self.bot.config, self.db, interaction, view, post, documents, success_message, True
         )
         
 

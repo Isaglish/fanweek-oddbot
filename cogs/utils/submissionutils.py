@@ -10,7 +10,8 @@ from typing import Optional, Any
 import discord
 import aiohttp
 from bs4 import BeautifulSoup
-from discord.ext import commands
+
+from .database import Database
 
 
 __all__ = (
@@ -123,7 +124,8 @@ async def create_submissions_embed(
 
 
 async def handle_confirm_view(
-    _self: commands.Cog,
+    config: dict[str, Any],
+    db: Database,
     interaction: discord.Interaction,
     view: discord.ui.View,
     post: dict[str, Any],
@@ -133,10 +135,10 @@ async def handle_confirm_view(
 ) -> None:
 
     if not delete_many:
-        confirm_message = f"{_self.bot.config['loading_emoji']} Deleting submission..."
+        confirm_message = f"{config['loading_emoji']} Deleting submission..."
         success_message = f"The game **{documents['title']}** has been removed from the database."
     else:
-        confirm_message = f"{_self.bot.config['loading_emoji']} Deleting submissions..."
+        confirm_message = f"{config['loading_emoji']} Deleting submissions..."
         success_message = success_message
 
     await view.wait()
@@ -159,9 +161,9 @@ async def handle_confirm_view(
         await interaction.edit_original_response(embed=embed, view=None)
 
         if not delete_many:
-            await _self.db.delete_one(post)
+            await db.delete_one(post)
         else:
-            await _self.db.delete_many(post)
+            await db.delete_many(post)
             embed.set_footer(text=f"Deleted a total of {len(documents)} submissions.")
 
         embed.description = success_message
