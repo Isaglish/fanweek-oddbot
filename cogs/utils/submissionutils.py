@@ -37,9 +37,9 @@ async def get_game_attrs(link: str) -> dict[str, Any]:
     return {"title": title, "image_url": image_url, "description": description, "author": author}
 
 
-async def check_game_exists(id: str) -> bool:
+async def check_game_exists(identifier: str) -> bool:
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"https://www.fancade.com/images/{id}.jpg") as response:
+        async with session.get(f"https://www.fancade.com/images/{identifier}.jpg") as response:
             try:
                 r = await response.text()
                 doc = BeautifulSoup(r, "html.parser")
