@@ -215,19 +215,19 @@ class Submission(commands.Cog):
     @submissions_group.command(name="show", description="Shows your (or another person's) submissions.")
     @app_commands.describe(
         member="The member you want to show the submissions of.",
-        all="This will show everyone's submissions."
+        show_all="This will show everyone's submissions."
     )
+    @app_commands.rename(show_all="all")
     async def show_submissions_command(
         self,
         interaction: discord.Interaction,
         member: Optional[discord.Member] = None,
-        all: bool = False
+        show_all: bool = False
     ) -> None:
 
-        if all:
+        if show_all:
             post = {"guild_id": interaction.guild.id}
             no_submission_message = "Hmm, it seems like nobody has submitted anything yet."
-            show_all = True
             user = None
 
         elif member is None or member == interaction.user:
@@ -273,18 +273,19 @@ class Submission(commands.Cog):
     @submissions_group.command(name="clear", description="Clears your (or another person's) submissions.")
     @app_commands.describe(
         member="The member you want to clear the submissions of. This requires Manage Server permission.",
-        all="This will clear everyone's submissions. This requires Manage Server permission."
+        clear_all="This will clear everyone's submissions. This requires Manage Server permission."
     )
+    @app_commands.rename(clear_all="all")
     async def clear_submissions_command(
         self,
         interaction: discord.Interaction,
         member: Optional[discord.Member] = None,
-        all: bool = False
+        clear_all: bool = False
     ) -> None:
 
         can_manage_guild = interaction.user.guild_permissions.manage_guild
 
-        if all:
+        if clear_all:
             post = {"guild_id": interaction.guild.id}
             no_submission_message = "Hmm, it seems like nobody has submitted anything yet."
             success_message = "All submissions have been deleted."
