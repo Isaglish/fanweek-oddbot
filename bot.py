@@ -25,6 +25,7 @@ SOFTWARE.
 import logging
 import json
 from pathlib import Path
+from typing import Any
 
 import humanize
 import discord
@@ -50,8 +51,7 @@ class Bot(commands.Bot):
         self.log = logging.getLogger("discord")
         self.log.setLevel(logging.INFO)
 
-        with open("config.json", "r") as f:
-            self.config = json.load(f)
+        self.config = self.load_config()
 
         super().__init__(
             command_prefix=self.cmd_prefix,
@@ -71,6 +71,13 @@ class Bot(commands.Bot):
 
         self.add_command(source)
         self.add_command(help)
+
+
+    def load_config(self) -> dict[str, Any]:
+        with open("config.json", "r") as f:
+            config = json.load(f)
+
+        return config
 
 
     # context menus
