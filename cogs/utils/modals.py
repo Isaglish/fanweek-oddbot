@@ -9,6 +9,8 @@ import traceback
 
 import discord
 
+from cogs.utils import submissionutils
+
 
 __all__ = (
     "ReportUserModal"
@@ -48,10 +50,12 @@ class ReportUserModal(discord.ui.Modal):
         await interaction.response.send_message("Thank you for reporting! We will come back to you after reviewing the report.", ephemeral=True)
         report_channel = await self.guild.fetch_channel(self.channel_id)
 
-        embed = discord.Embed(color=discord.Color.red())
-        embed.description = f"**Reported User**: {self.member.mention}\n**User ID**: {self.member.id}\n\n**Reason for reporting**: {self.name.value}\n**Description**: {self.description.value}"
-        embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
-
+        embed = submissionutils.create_embed_with_author(
+            discord.Color.red(),
+            f"**Reported User**: {self.member.mention}\n**User ID**: {self.member.id}\n\n**Reason for reporting**: {self.name.value}\n**Description**: {self.description.value}",
+            interaction.user,
+            interaction.user.avatar.url
+        )
         await report_channel.send(embed=embed)
 
 

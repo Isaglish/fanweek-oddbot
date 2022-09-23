@@ -16,7 +16,8 @@ from discord.ext import commands
 __all__ = (
     "get_game_attrs",
     "check_game_exists",
-    "send_error_message",
+    "create_embed_with_author",
+    "send_error_embed",
     "create_submissions_embed",
     "handle_unsubmit_confirm_view"
 )
@@ -50,9 +51,26 @@ async def check_game_exists(id: str) -> bool:
                 return True
 
 
-async def send_error_message(interaction: discord.Interaction, message: str) -> None:
-    embed = discord.Embed(color=discord.Color.red(), description=message)
-    embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
+def create_embed_with_author(
+    color: discord.Color,
+    description: str,
+    author_name: str,
+    author_icon_url: str
+) -> discord.Embed:
+
+    embed = discord.Embed(color=color, description=description)
+    embed.set_author(name=author_name, icon_url=author_icon_url)
+
+    return embed
+
+
+async def send_error_embed(interaction: discord.Interaction, message: str) -> None:
+    embed = create_embed_with_author(
+        discord.Color.red(),
+        message,
+        interaction.user,
+        interaction.user.avatar.url
+    )
     try:
         await interaction.response.send_message(embed=embed)
     except discord.InteractionResponded:
@@ -85,14 +103,19 @@ async def create_submissions_embed(
         info = "\n".join(infos)
 
         if show_all:
-            embed = discord.Embed(color=discord.Color.blue(), description=f"**Showing all submissions:**\n\n{info}")
-            embed.set_author(name=f"{interaction.guild} Submissions", icon_url=interaction.guild.icon.url)
-        else:
-            embed = discord.Embed(
-                color=discord.Color.blue(),
-                description=f"**Showing all of {member}'s submissions:**\n\n{info}"
+            embed = create_embed_with_author(
+                discord.Color.blue(),
+                f"**Showing all submissions:**\n\n{info}",
+                f"{interaction.guild} Submissions",
+                interaction.guild.icon.url
             )
-            embed.set_author(name=f"{interaction.user}", icon_url=interaction.user.avatar.url)
+        else:
+            embed = create_embed_with_author(
+                discord.Color.blue(),
+                f"**Showing all of {member}'s submissions:**\n\n{info}",
+                interaction.user,
+                interaction.guild.icon.url
+            )
 
         embeds.append(embed)
 
@@ -118,13 +141,21 @@ async def handle_confirm_view(
 
     await view.wait()
     if view.value is None:
-        embed = discord.Embed(color=discord.Color.red(), description="You took too long to respond.")
-        embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
+        embed = create_embed_with_author(
+            discord.Color.red(),
+            "You took too long to respond.",
+            interaction.user,
+            interaction.user.avatar.url
+        )
         await interaction.edit_original_response(embed=embed)
 
     elif view.value:
-        embed = discord.Embed(color=discord.Color.blue(), description=confirm_message)
-        embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
+        embed = create_embed_with_author(
+            discord.Color.blue(),
+            confirm_message,
+            interaction.user,
+            interaction.user.avatar.url
+        )
         await interaction.edit_original_response(embed=embed, view=None)
 
         if not delete_many:
@@ -138,6 +169,10 @@ async def handle_confirm_view(
         await interaction.edit_original_response(embed=embed, view=None)
 
     else:
-        embed = discord.Embed(color=discord.Color.red(), description="Command has been cancelled.")
-        embed.set_author(name=interaction.user, icon_url=interaction.user.avatar.url)
+        embed = create_embed_with_author(
+            discord.Color.red(),
+            "Command has been cancelled.",
+            interaction.user,
+            interaction.user.avatar.url
+        )
         await interaction.edit_original_response(embed=embed, view=None)
