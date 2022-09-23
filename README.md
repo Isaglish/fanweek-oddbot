@@ -49,9 +49,9 @@ Parameters inside `[default: value]` are optional.
 
 #### Uncategorized
 
-| Command                      | Description                                      | Permissions |
-| ---------------------------- | ------------------------------------------------ | ----------- |
-| **`/getsource <file_name>`** | Gets the source of the file and sends it to you. | `None`      |
+| Command                            | Description                                      | Permissions |
+| ---------------------------------- | ------------------------------------------------ | ----------- |
+| **`/getsource [file_name: None]`** | Gets the source of the file and sends it to you. | `None`      |
 
 
 ### Context Menus

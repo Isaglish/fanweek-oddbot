@@ -25,7 +25,7 @@ SOFTWARE.
 import logging
 import json
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
 import discord
 from discord.ext import commands
@@ -121,7 +121,7 @@ async def help(ctx: commands.Context) -> None:
 
 @commands.is_owner()
 @commands.command()
-async def sync(ctx: commands.Context, option: Literal["~", "*", "^"]) -> None:
+async def sync(ctx: commands.Context, option: Optional[Literal["~", "*", "^"]] = None) -> None:
     """Syncs all app commands to the server"""
     if option == "~":
         synced = await ctx.bot.tree.sync(guild=ctx.guild)
@@ -134,5 +134,8 @@ async def sync(ctx: commands.Context, option: Literal["~", "*", "^"]) -> None:
         ctx.bot.tree.clear_commands(guild=ctx.guild)
         await ctx.bot.tree.sync(guild=ctx.guild)
         synced = []
+
+    else:
+        synced = await ctx.bot.tree.sync()
 
     await ctx.send(f"Synced {len(synced)} commands to the current guild.")
