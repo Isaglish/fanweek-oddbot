@@ -17,6 +17,7 @@ However, this source is provided to give you an idea on how I created Odd Bot an
   - [Text Commands](#text-commands)
   - [Slash Commands](#slash-commands)
     - [Submissions](#submissions)
+    - [Uncategorized](#uncategorized)
   - [Context Menus](#context-menus)
 - [Issues](#issues)
 - [Links](#links)
@@ -27,7 +28,6 @@ However, this source is provided to give you an idea on how I created Odd Bot an
 
 | Command                    | Description                                           | Permissions |
 | -------------------------- | ----------------------------------------------------- | ----------- |
-| **`ob.source`**            | Returns the link to this repository                   | `None`      |
 | **`ob.help`**              | Returns a link to the Features section of this README | `None`      |
 | **`ob.sync <option>`**     | Syncs app commands.                                   | `Bot Owner` |
 | **`ob.jsk : ob.jishaku `** | Jishaku extension for testing and debugging.          | `Bot Owner` |
@@ -46,6 +46,12 @@ Parameters inside `[default: value]` are optional.
 | **`/submissions unsubmit <link>`**                    | Removes your submission from the database. | un-submitting another member's submission requires `Manage Server`             |
 | **`/submissions show [member: None] [all: False] `**  | Shows all of your submissions.             | `None`                                                                         |
 | **`/submissions clear [member: None] [all: False] `** | Clears all of your submissions.            | accessing **`[member: None]`** and **`[all: False]`** requires `Manage Server` |
+
+#### Uncategorized
+
+| Command                      | Description                                      | Permissions |
+| ---------------------------- | ------------------------------------------------ | ----------- |
+| **`/getsource <file_name>`** | Gets the source of the file and sends it to you. | `None`      |
 
 
 ### Context Menus

@@ -67,7 +67,6 @@ class Bot(commands.Bot):
         )
         self.tree.add_command(self.report_user_ctx_menu)
 
-        self.add_command(source)
         self.add_command(help)
         self.add_command(sync)
 
@@ -111,15 +110,9 @@ class Bot(commands.Bot):
 
     async def on_disconnect(self) -> None:
         self.log.critical("Bot has disconnected!")
-
+        
 
 # ungrouped commands
-@commands.command()
-async def source(ctx: commands.Context) -> None:
-    """Returns the source code link to Odd Bot."""
-    await ctx.send("https://github.com/Isaglish/fanweek-oddbot")
-
-
 @commands.command()
 async def help(ctx: commands.Context) -> None:
     """Returns a link to the list of features the bot has."""

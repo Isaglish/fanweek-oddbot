@@ -8,6 +8,7 @@ Main feature of Odd Bot, keeps track of submissions.
 import string
 import random
 from typing import Optional
+from io import BytesIO
 
 import discord
 from discord import app_commands
@@ -26,6 +27,7 @@ class Submission(commands.Cog):
         self.bot = bot
         self.log = bot.log
         self.db = Database(bot.config, "fanweek", "submissions")
+        self.open_source_files = bot.config["open_source_files"]
 
 
     # groups
@@ -329,6 +331,27 @@ class Submission(commands.Cog):
         await submissionutils.handle_confirm_view(
             self.bot.config, self.db, interaction, view, post, documents, success_message, True
         )
+
+
+    @app_commands.command(name="getsource", description="Gets the source of the file and sends it to you.")
+    @app_commands.describe(file_name="The name of the file you want to get the source of.")
+    async def get_source(self, interaction: discord.Interaction, file_name: str) -> None:
+        if not file_name in self.open_source_files:
+            await submissionutils.send_error_embed(interaction, "Sorry, but you either can't access that file or it doesn't exist.")
+            return None
+
+        with open(file_name, "r") as f:
+            buffer = BytesIO(f.read().encode("utf8"))
+
+        file = discord.File(buffer, file_name)
+        await interaction.response.send_message(file=file)
+
+
+    @get_source.autocomplete("file_name")
+    async def get_source_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
+        return [
+            app_commands.Choice(name=source_name, value=source_name) for source_name in self.open_source_files
+        ]
         
 
 async def setup(bot: commands.Bot) -> None:
