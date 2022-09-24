@@ -12,7 +12,7 @@ from discord import app_commands
 
 __all__ = (
     "MissingPermission",
-    "FileNoAccessError"
+    "FileForbiddenAccess"
 )
 
 
@@ -24,7 +24,7 @@ class MissingPermission(app_commands.AppCommandError):
         super().__init__(f"Member missing {missing_permission} permission.")
 
 
-class FileNoAccessError(app_commands.AppCommandError):
+class FileForbiddenAccess(app_commands.AppCommandError):
     """An exception raised when you don't have access to the file."""
 
     def __init__(self, message: Optional[str] = None) -> None:
