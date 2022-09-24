@@ -78,7 +78,7 @@ class Submission(commands.Cog):
 
         game_identifier_len = 16
         game_identifier = link[25:]
-        if len(game_identifier) > game_identifier_len or len(game_identifier) < game_identifier_len:
+        if len(game_identifier) != game_identifier_len:
             raise errors.InvalidLinkError("That is an invalid link.")
 
         game_exists = await funcutils.submission.check_game_exists(game_identifier)
