@@ -20,7 +20,7 @@ def create_embed_with_author(
     color: discord.Color,
     description: str,
     author: str | discord.Member,
-    author_icon_url: Optional[str] = None
+    author_icon_url: Optional[discord.Asset] = None
 ) -> discord.Embed:
     if not author_icon_url:
         if not isinstance(author, discord.Member):
