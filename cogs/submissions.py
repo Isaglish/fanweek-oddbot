@@ -7,16 +7,17 @@ Main feature of Odd Bot, keeps track of submissions.
 
 import string
 import random
-from typing import Optional
 from io import BytesIO
+from typing import Optional
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
+from . import utils, errors
+from .utils import funcutils
 from .utils.database import Database
 from .utils.views import Confirm, EmbedPaginator
-from .utils import funcutils
 
 
 class Submission(commands.Cog):
@@ -31,7 +32,7 @@ class Submission(commands.Cog):
 
 
     # groups
-    submissions_group = app_commands.Group(name="submissions", description="Commands related to submissions.")
+    submissions_group = utils.app_commands.Group(name="submissions", description="Commands related to submissions.")
 
 
     @commands.Cog.listener()
@@ -51,34 +52,34 @@ class Submission(commands.Cog):
         member: Optional[discord.Member] = None
     ) -> None:
 
+        embed = funcutils.embed.create_embed_with_author(
+                discord.Color.blue(),
+                f"{self.bot.config['loading_emoji']} Processing submission...",
+                interaction.user,
+                interaction.user.avatar.url
+            )
+        await interaction.response.send_message(embed=embed)
+
         if not link.startswith("https://play.fancade.com/"):
-            await funcutils.embed.send_embed(interaction, "Sorry, but I don't recognize that link.")
-            return None
+            raise errors.UnrecognizedLinkError("I don't recognize that link.")
 
         can_manage_guild = interaction.user.guild_permissions.manage_guild
         document =  await self.db.find_one({"guild_id": interaction.guild_id, "link": link})
         game_attrs = await funcutils.submission.get_game_attrs(link)
 
         if not can_manage_guild and member != interaction.user and member is not None:
-            await funcutils.embed.send_embed(
-                interaction,
-                "Sorry, you can't submit for another member since you're missing `Manage Server` permission."
-            )
-            return None
+            raise errors.MissingPermission("Manage Server")
 
         if document is not None:
             author = await interaction.guild.fetch_member(document["author_id"])
-            await funcutils.embed.send_embed(
-                interaction,
-                f"Sorry, but the game **{document['title']}** has already been submitted by **{author}**."
+            raise errors.SubmissionAlreadyExists(
+                f"The game **{document['title']}** has already been submitted by **{author}**."
             )
-            return None
 
         game_identifier_len = 16
         game_identifier = link[25:]
         if len(game_identifier) > game_identifier_len or len(game_identifier) < game_identifier_len:
-            await funcutils.embed.send_embed(interaction, "Sorry, but I can't find that game.")
-            return None
+            raise errors.InvalidLinkError("That is an invalid link.")
 
         game_exists = await funcutils.submission.check_game_exists(game_identifier)
         if game_exists and game_attrs["title"] == "Fancade":  # has an image but no title
@@ -86,20 +87,9 @@ class Submission(commands.Cog):
             game_attrs["title"] = f"?ULG__{identifier}?"
 
         elif not game_exists and game_attrs["title"] == "Fancade":  # has no image and no title
-            await funcutils.embed.send_embed(
-                interaction,
-                "Hmm, either that game doesn't exist or it hasn't been processed yet."
-            )
-            return None
+            raise errors.VoidGameError("Hmm.. It seems like that game doesn't exist.")
 
         if member is None or member == interaction.user:
-            embed = funcutils.embed.create_embed_with_author(
-                discord.Color.blue(),
-                f"{self.bot.config['loading_emoji']} Processing submission...",
-                interaction.user,
-                interaction.user.avatar.url
-            )
-            await interaction.response.send_message(embed=embed)
 
             post = {
                 "guild_id": interaction.guild_id,
@@ -114,14 +104,7 @@ class Submission(commands.Cog):
             await interaction.edit_original_response(embed=embed)
 
         elif member is not None or member != interaction.user:
-            embed = funcutils.embed.create_embed_with_author(
-                discord.Color.blue(),
-                f"{self.bot.config['loading_emoji']} Processing submission...",
-                interaction.user,
-                interaction.user.avatar.url
-            )
-            await interaction.response.send_message(embed=embed)
-
+            
             post = {
                 "guild_id": interaction.guild_id,
                 "author_id": member.id,
@@ -141,26 +124,20 @@ class Submission(commands.Cog):
     async def unsubmit_command(self, interaction: discord.Interaction, link: str) -> None:
 
         if not link.startswith("https://play.fancade.com/"):
-            await funcutils.embed.send_embed(interaction, "Sorry, but I don't recognize that link.")
-            return None
+            raise errors.UnrecognizedLinkError("I don't recognize that link.")
 
         can_manage_guild = interaction.user.guild_permissions.manage_guild
         document = await self.db.find_one({"guild_id": interaction.guild_id, "link": link})
 
         if document is None:
-            await funcutils.embed.send_embed(interaction, "Sorry, but I can't find that game in the database.")
-            return None
+            raise errors.SubmissionNotInDatabase("I can't find that game in the database.")
 
         author = await interaction.guild.fetch_member(document["author_id"])
         view = Confirm(interaction.user)
 
         if author.id != interaction.user.id:
             if not can_manage_guild:
-                await funcutils.embed.send_embed(
-                    interaction,
-                    "Sorry, but you can't unsubmit another member's submission since you're missing `Manage Server` permission."
-                )
-                return None
+                errors.MissingPermission("Manage Server")
 
             embed = funcutils.embed.create_embed_with_author(
                 discord.Color.orange(),
@@ -248,8 +225,7 @@ class Submission(commands.Cog):
         documents.sort(key=lambda x: x["author_id"])
 
         if not documents:
-            await funcutils.embed.send_embed(interaction, no_submission_message)
-            return None
+            raise errors.NoSubmissionError(no_submission_message)
 
         embed = funcutils.embed.create_embed_with_author(
             discord.Color.blue(),
@@ -294,8 +270,7 @@ class Submission(commands.Cog):
             confirm_message = "This will delete everyone's submissions. Are you sure you wanna proceed?"
 
             if not can_manage_guild:
-                await funcutils.embed.send_embed(interaction, "Sorry, but you are missing `Manage Server` permission.")
-                return None
+                raise errors.MissingPermission("Manage Server")
 
         elif member is None or member == interaction.user:
             post = {"guild_id": interaction.guild.id, "author_id": interaction.user.id}
@@ -310,13 +285,11 @@ class Submission(commands.Cog):
             confirm_message = f"This will delete all of **{member}**'s submissions. Are you sure you wanna proceed?"
 
             if not can_manage_guild:
-                await funcutils.embed.send_embed(interaction, "Sorry, but you are missing `Manage Server` permission.")
-                return None
+                raise errors.MissingPermission("Manage Server")
 
         documents = await self.db.find(post)
         if not documents:
-            await funcutils.embed.send_embed(interaction, no_submission_message)
-            return None
+            raise errors.NoSubmissionError(no_submission_message)
 
         view = Confirm(interaction.user)
 
@@ -337,8 +310,7 @@ class Submission(commands.Cog):
     @app_commands.describe(file_name="The name of the file you want to get the source of.")
     async def get_source(self, interaction: discord.Interaction, file_name: str) -> None:
         if not file_name in self.open_source_files:
-            await funcutils.embed.send_embed(interaction, "Sorry, but you either can't access that file or it doesn't exist.")
-            return None
+            raise errors.FileNoAccessError("Sorry, but you either can't access that file or it doesn't exist.")
 
         with open(file_name, "r") as f:
             buffer = BytesIO(f.read().encode("utf8"))
@@ -352,7 +324,18 @@ class Submission(commands.Cog):
         return [
             app_commands.Choice(name=source_name, value=source_name) for source_name in self.open_source_files
         ]
-        
+
+
+    @get_source.error
+    async def on_get_source_error(
+        self, interaction: discord.Interaction, error: app_commands.AppCommandError
+    ) -> None:
+
+        if isinstance(error, errors.FileNoAccessError):
+            await funcutils.embed.send_error_embed(interaction, error.message)
+        else:
+            raise error
+
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Submission(bot))
