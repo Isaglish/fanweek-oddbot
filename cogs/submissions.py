@@ -15,7 +15,6 @@ from discord import app_commands
 from discord.ext import commands
 
 from . import utils, errors
-from .utils import funcutils
 from .utils.database import Database
 from .utils.views import Confirm, EmbedPaginator
 
@@ -52,7 +51,7 @@ class Submission(commands.Cog):
         member: Optional[discord.Member] = None
     ) -> None:
 
-        embed = funcutils.embed.create_embed_with_author(
+        embed = utils.embed.create_embed_with_author(
                 discord.Color.blue(),
                 f"{self.bot.config['loading_emoji']} Processing submission...",
                 interaction.user,
@@ -65,7 +64,7 @@ class Submission(commands.Cog):
 
         can_manage_guild = interaction.user.guild_permissions.manage_guild
         document =  await self.db.find_one({"guild_id": interaction.guild_id, "link": link})
-        game_attrs = await funcutils.submission.get_game_attrs(link)
+        game_attrs = await utils.submission.get_game_attrs(link)
 
         if not can_manage_guild and member != interaction.user and member is not None:
             raise errors.MissingPermission("Manage Server")
@@ -81,7 +80,7 @@ class Submission(commands.Cog):
         if len(game_identifier) != game_identifier_len:
             raise errors.InvalidLinkError("That is an invalid link.")
 
-        game_exists = await funcutils.submission.check_game_exists(game_identifier)
+        game_exists = await utils.submission.check_game_exists(game_identifier)
         if game_exists and game_attrs["title"] == "Fancade":  # has an image but no title
             identifier = "".join(random.choices(string.ascii_letters, k=6))
             game_attrs["title"] = f"?ULG__{identifier}?"
@@ -139,7 +138,7 @@ class Submission(commands.Cog):
             if not can_manage_guild:
                 errors.MissingPermission("Manage Server")
 
-            embed = funcutils.embed.create_embed_with_author(
+            embed = utils.embed.create_embed_with_author(
                 discord.Color.orange(),
                 f"This will delete the submission **{document['title']}** which was submitted by **{author}**. Are you sure you wanna proceed?",
                 interaction.user,
@@ -147,12 +146,12 @@ class Submission(commands.Cog):
             )
             await interaction.response.send_message(embed=embed, view=view)
 
-            await funcutils.submission.handle_confirm_view(
+            await utils.submission.handle_confirm_view(
                 self.bot.config, self.db, interaction, view, {"guild_id": interaction.guild.id, "link": link}, document
             )
 
         if author.id == interaction.user.id:
-            embed = funcutils.embed.create_embed_with_author(
+            embed = utils.embed.create_embed_with_author(
                 discord.Color.orange(),
                 f"This will delete your submission **{document['title']}**. Are you sure you wanna proceed?",
                 interaction.user,
@@ -160,7 +159,7 @@ class Submission(commands.Cog):
             )
             await interaction.response.send_message(embed=embed, view=view)
 
-            await funcutils.submission.handle_confirm_view(
+            await utils.submission.handle_confirm_view(
                 self.bot.config, self.db, interaction, view, {"guild_id": interaction.guild.id, "link": link}, document
             )
 
@@ -227,7 +226,7 @@ class Submission(commands.Cog):
         if not documents:
             raise errors.NoSubmissionError(no_submission_message)
 
-        embed = funcutils.embed.create_embed_with_author(
+        embed = utils.embed.create_embed_with_author(
             discord.Color.blue(),
             f"{self.bot.config['loading_emoji']} Loading submissions...",
             interaction.user,
@@ -235,7 +234,7 @@ class Submission(commands.Cog):
         )
         await interaction.response.send_message(embed=embed)
 
-        embeds = await funcutils.submission.create_submissions_embed(interaction, documents, user, show_all)
+        embeds = await utils.submission.create_submissions_embed(interaction, documents, user, show_all)
         paginator = EmbedPaginator(interaction, embeds, documents)
 
         if paginator.max_pages > 1:
@@ -293,7 +292,7 @@ class Submission(commands.Cog):
 
         view = Confirm(interaction.user)
 
-        embed = funcutils.embed.create_embed_with_author(
+        embed = utils.embed.create_embed_with_author(
             discord.Color.orange(),
             confirm_message,
             interaction.user,
@@ -301,7 +300,7 @@ class Submission(commands.Cog):
         )
         await interaction.response.send_message(embed=embed, view=view)
 
-        await funcutils.submission.handle_confirm_view(
+        await utils.submission.handle_confirm_view(
             self.bot.config, self.db, interaction, view, post, documents, success_message, True
         )
 
@@ -332,7 +331,7 @@ class Submission(commands.Cog):
     ) -> None:
 
         if isinstance(error, errors.FileNoAccessError):
-            await funcutils.embed.send_error_embed(interaction, error.message)
+            await utils.embed.send_error_embed(interaction, error.message)
         else:
             raise error
 

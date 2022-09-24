@@ -11,7 +11,7 @@ import discord
 import aiohttp
 from bs4 import BeautifulSoup
 
-from ..database import Database
+from .database import Database
 from .embed import create_embed_with_author
 
 

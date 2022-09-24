@@ -17,12 +17,12 @@ __all__ = (
 def create_embed_with_author(
     color: discord.Color,
     description: str,
-    author_name: str,
+    author: str | discord.Member,
     author_icon_url: str
 ) -> discord.Embed:
 
     embed = discord.Embed(color=color, description=description)
-    embed.set_author(name=author_name, icon_url=author_icon_url)
+    embed.set_author(name=author, icon_url=author_icon_url)
 
     return embed
 

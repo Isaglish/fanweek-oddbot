@@ -17,7 +17,7 @@ from ..errors import (
     SubmissionNotInDatabase,
     NoSubmissionError
 )
-from .funcutils.embed import send_error_embed
+from .embed import send_error_embed
 
 
 __all__ = (
