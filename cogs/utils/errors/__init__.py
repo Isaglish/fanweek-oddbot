@@ -1,8 +1,8 @@
 """
-Useful utilities I can use to help with coding.
+Custom Exceptions.
 
 :copyright: (c) 2022 Isaglish
 :license: MIT, see LICENSE for more details.
 """
 
-from . import errors
+from .submission import UnrecognizedLinkError, add_error_handler
