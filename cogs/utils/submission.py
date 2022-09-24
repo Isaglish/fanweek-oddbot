@@ -119,8 +119,7 @@ async def handle_confirm_view(
         embed = create_embed_with_author(
             discord.Color.red(),
             "You took too long to respond.",
-            interaction.user,
-            interaction.user.avatar.url
+            interaction.user
         )
         await interaction.edit_original_response(embed=embed)
 
@@ -128,8 +127,7 @@ async def handle_confirm_view(
         embed = create_embed_with_author(
             discord.Color.blue(),
             confirm_message,
-            interaction.user,
-            interaction.user.avatar.url
+            interaction.user
         )
         await interaction.edit_original_response(embed=embed, view=None)
 
@@ -147,7 +145,6 @@ async def handle_confirm_view(
         embed = create_embed_with_author(
             discord.Color.red(),
             "Command has been cancelled.",
-            interaction.user,
-            interaction.user.avatar.url
+            interaction.user
         )
         await interaction.edit_original_response(embed=embed, view=None)

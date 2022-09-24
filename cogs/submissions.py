@@ -54,8 +54,7 @@ class Submission(commands.Cog):
         embed = utils.embed.create_embed_with_author(
                 discord.Color.blue(),
                 f"{self.bot.config['loading_emoji']} Processing submission...",
-                interaction.user,
-                interaction.user.avatar.url
+                interaction.user
             )
         await interaction.response.send_message(embed=embed)
 
@@ -141,8 +140,7 @@ class Submission(commands.Cog):
             embed = utils.embed.create_embed_with_author(
                 discord.Color.orange(),
                 f"This will delete the submission **{document['title']}** which was submitted by **{author}**. Are you sure you wanna proceed?",
-                interaction.user,
-                interaction.user.avatar.url
+                interaction.user
             )
             await interaction.response.send_message(embed=embed, view=view)
 
@@ -154,8 +152,7 @@ class Submission(commands.Cog):
             embed = utils.embed.create_embed_with_author(
                 discord.Color.orange(),
                 f"This will delete your submission **{document['title']}**. Are you sure you wanna proceed?",
-                interaction.user,
-                interaction.user.avatar.url
+                interaction.user
             )
             await interaction.response.send_message(embed=embed, view=view)
 
@@ -229,8 +226,7 @@ class Submission(commands.Cog):
         embed = utils.embed.create_embed_with_author(
             discord.Color.blue(),
             f"{self.bot.config['loading_emoji']} Loading submissions...",
-            interaction.user,
-            interaction.user.avatar.url
+            interaction.user
         )
         await interaction.response.send_message(embed=embed)
 
@@ -295,8 +291,7 @@ class Submission(commands.Cog):
         embed = utils.embed.create_embed_with_author(
             discord.Color.orange(),
             confirm_message,
-            interaction.user,
-            interaction.user.avatar.url
+            interaction.user
         )
         await interaction.response.send_message(embed=embed, view=view)
 

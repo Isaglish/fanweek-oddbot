@@ -5,6 +5,8 @@ Utility functions for embeds.
 :license: MIT, see LICENSE for more details.
 """
 
+from typing import Optional
+
 import discord
 
 
@@ -18,8 +20,13 @@ def create_embed_with_author(
     color: discord.Color,
     description: str,
     author: str | discord.Member,
-    author_icon_url: str
+    author_icon_url: Optional[str] = None
 ) -> discord.Embed:
+    if not author_icon_url:
+        if not isinstance(author, discord.Member):
+            raise TypeError("Author doesn't have 'avatar' attribute.")
+
+        author_icon_url = author.avatar.url
 
     embed = discord.Embed(color=color, description=description)
     embed.set_author(name=author, icon_url=author_icon_url)
@@ -31,8 +38,7 @@ async def send_error_embed(interaction: discord.Interaction, message: str) -> No
     embed = create_embed_with_author(
         discord.Color.red(),
         message,
-        interaction.user,
-        interaction.user.avatar.url
+        interaction.user
     )
     try:
         await interaction.response.send_message(embed=embed)

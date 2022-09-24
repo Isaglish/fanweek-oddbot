@@ -54,7 +54,6 @@ class ReportUserModal(discord.ui.Modal):
             discord.Color.red(),
             f"**Reported User**: {self.member.mention}\n**User ID**: {self.member.id}\n\n**Reason for reporting**: {self.name.value}\n**Description**: {self.description.value}",
             interaction.user,
-            interaction.user.avatar.url
         )
         await report_channel.send(embed=embed)
 
