@@ -5,4 +5,4 @@ Useful utilities I can use to help with coding.
 :license: MIT, see LICENSE for more details.
 """
 
-from . import errors
+from . import app_commands

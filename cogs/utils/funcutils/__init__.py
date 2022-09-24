@@ -5,5 +5,4 @@ Useful function utilities I can use to help with coding.
 :license: MIT, see LICENSE for more details.
 """
 
-from . import submission
-from . import embed
+from . import submission, embed

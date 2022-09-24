@@ -5,4 +5,6 @@ Custom Exceptions.
 :license: MIT, see LICENSE for more details.
 """
 
-from .submission import UnrecognizedLinkError, add_error_handler
+from .general import *
+from .links import *
+from .submission import *
