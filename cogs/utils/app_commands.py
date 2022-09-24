@@ -27,14 +27,14 @@ __all__ = (
 
 class Group(app_commands.Group):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
 
-    async def on_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
+    async def on_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError) -> None:
         
         if isinstance(
-            error, 
+            error,
             UnrecognizedLinkError | 
             SubmissionAlreadyExists |
             InvalidLinkError |

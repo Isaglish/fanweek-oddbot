@@ -327,7 +327,9 @@ class Submission(commands.Cog):
 
 
     @get_source.error
-    async def on_get_source_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
+    async def on_get_source_error(
+        self, interaction: discord.Interaction, error: app_commands.AppCommandError
+    ) -> None:
 
         if isinstance(error, errors.FileNoAccessError):
             await funcutils.embed.send_error_embed(interaction, error.message)
