@@ -12,7 +12,7 @@ import aiohttp
 from bs4 import BeautifulSoup
 
 from ..database import Database
-from .embedutils import create_embed_with_author
+from .embed import create_embed_with_author
 
 
 __all__ = (
