@@ -8,22 +8,25 @@ Main feature of Odd Bot, keeps track of submissions.
 import string
 import random
 from io import BytesIO
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from . import utils, errors
-from .utils.database import Database
-from .utils.views import Confirm, EmbedPaginator
+from cogs import utils, errors
+from cogs.utils.database import Database
+from cogs.utils.views import Confirm, EmbedPaginator
+
+if TYPE_CHECKING:
+    from ..bot import Bot
 
 
 class Submission(commands.Cog):
 
-    __slots__ = "bot", "log", "db"
+    __slots__ = "bot", "log", "db", "open_source_files"
 
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: "Bot") -> None:
         self.bot = bot
         self.log = bot.log
         self.db = Database(bot.config, "fanweek", "submissions")
@@ -51,6 +54,9 @@ class Submission(commands.Cog):
         member: Optional[discord.Member] = None
     ) -> None:
 
+        assert isinstance(interaction.user, discord.Member)
+        assert interaction.guild
+
         embed = utils.embed.create_embed_with_author(
                 discord.Color.blue(),
                 f"{self.bot.config['loading_emoji']} Processing submission...",
@@ -61,7 +67,7 @@ class Submission(commands.Cog):
         if not link.startswith("https://play.fancade.com/"):
             raise errors.UnrecognizedLinkError("I don't recognize that link.")
 
-        can_manage_guild = interaction.user.guild_permissions.manage_guild
+        can_manage_guild: bool = interaction.user.guild_permissions.manage_guild
         document =  await self.db.find_one({"guild_id": interaction.guild_id, "link": link})
         game_attrs = await utils.submission.get_game_attrs(link)
 
@@ -69,7 +75,7 @@ class Submission(commands.Cog):
             raise errors.MissingPermission("Manage Server")
 
         if document is not None:
-            author = await interaction.guild.fetch_member(document["author_id"])
+            author: discord.Member = await interaction.guild.fetch_member(document["author_id"])
             raise errors.SubmissionAlreadyExists(
                 f"The game **{document['title']}** has already been submitted by **{author}**."
             )
@@ -102,6 +108,7 @@ class Submission(commands.Cog):
             await interaction.edit_original_response(embed=embed)
 
         elif member is not None or member != interaction.user:
+            assert member.avatar
             
             post = {
                 "guild_id": interaction.guild_id,
@@ -120,11 +127,13 @@ class Submission(commands.Cog):
     @submissions_group.command(name="unsubmit", description="Unsubmits your game from the database")
     @app_commands.describe(link="Your game's link, you can get this by sharing your game in Fancade.")
     async def unsubmit_command(self, interaction: discord.Interaction, link: str) -> None:
+        assert isinstance(interaction.user, discord.Member)
+        assert interaction.guild
 
         if not link.startswith("https://play.fancade.com/"):
             raise errors.UnrecognizedLinkError("I don't recognize that link.")
 
-        can_manage_guild = interaction.user.guild_permissions.manage_guild
+        can_manage_guild: bool = interaction.user.guild_permissions.manage_guild
         document = await self.db.find_one({"guild_id": interaction.guild_id, "link": link})
 
         if document is None:
@@ -167,6 +176,8 @@ class Submission(commands.Cog):
         interaction: discord.Interaction,
         current: str
     ) -> list[app_commands.Choice[str]]:
+        assert isinstance(interaction.user, discord.Member)
+        assert interaction.guild
 
         if interaction.user.guild_permissions.manage_guild:
             post = {"title": {"$regex": current}, "guild_id": interaction.guild.id}
@@ -199,6 +210,8 @@ class Submission(commands.Cog):
         member: Optional[discord.Member] = None,
         show_all: bool = False
     ) -> None:
+        
+        assert interaction.guild
 
         if show_all:
             post = {"guild_id": interaction.guild.id}
@@ -256,6 +269,9 @@ class Submission(commands.Cog):
         clear_all: bool = False
     ) -> None:
 
+        assert isinstance(interaction.user, discord.Member)
+        assert interaction.guild
+
         can_manage_guild = interaction.user.guild_permissions.manage_guild
 
         if clear_all:
@@ -304,7 +320,7 @@ class Submission(commands.Cog):
     @app_commands.describe(file_name="The name of the file you want to get the source of.")
     async def get_source(self, interaction: discord.Interaction, file_name: str) -> None:
         if not file_name in self.open_source_files:
-            raise errors.FileNoAccessError("Sorry, but you either can't access that file or it doesn't exist.")
+            raise errors.FileForbiddenAccess("Sorry, but you either can't access that file or it doesn't exist.")
 
         with open(file_name, "r") as f:
             buffer = BytesIO(f.read().encode("utf8"))
@@ -325,11 +341,11 @@ class Submission(commands.Cog):
         self, interaction: discord.Interaction, error: app_commands.AppCommandError
     ) -> None:
 
-        if isinstance(error, errors.FileNoAccessError):
+        if isinstance(error, errors.FileForbiddenAccess):
             await utils.embed.send_error_embed(interaction, error.message)
         else:
             raise error
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: "Bot") -> None:
     await bot.add_cog(Submission(bot))

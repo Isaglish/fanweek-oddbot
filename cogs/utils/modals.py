@@ -9,7 +9,7 @@ import traceback
 
 import discord
 
-from .embed import create_embed_with_author
+from cogs.utils.embed import create_embed_with_author
 
 
 __all__ = (
@@ -21,7 +21,7 @@ class ReportUserModal(discord.ui.Modal):
 
     __slots__ = "member", "channel_id", "guild"
 
-    def __init__(self, member: discord.Member, channel_id: discord.TextChannel, guild: discord.Guild) -> None:
+    def __init__(self, member: discord.Member, channel_id: int, guild: discord.Guild) -> None:
         self.member = member
         self.channel_id = channel_id
         self.guild = guild
@@ -47,8 +47,12 @@ class ReportUserModal(discord.ui.Modal):
 
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
+
         await interaction.response.send_message("Thank you for reporting! We will come back to you after reviewing the report.", ephemeral=True)
+
         report_channel = await self.guild.fetch_channel(self.channel_id)
+
+        assert isinstance(report_channel, discord.TextChannel)
 
         embed = create_embed_with_author(
             discord.Color.red(),

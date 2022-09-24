@@ -83,7 +83,7 @@ class EmbedPaginator(discord.ui.View):
         await interaction.response.edit_message(embed=embed, view=self)
 
 
-    async def interaction_check(self, interaction: discord.Interaction) -> None:
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if self.author == interaction.user:
             return True
         else:

@@ -8,7 +8,7 @@ Overwritten discord.app_commands
 import discord
 from discord import app_commands
 
-from ..errors import (
+from cogs.errors import (
     UnrecognizedLinkError,
     MissingPermission,
     SubmissionAlreadyExists,
@@ -17,7 +17,7 @@ from ..errors import (
     SubmissionNotInDatabase,
     NoSubmissionError
 )
-from .embed import send_error_embed
+from cogs.utils.embed import send_error_embed
 
 
 __all__ = (

@@ -31,7 +31,13 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
+from cogs.utils import Context
 from cogs.utils.modals import ReportUserModal
+
+
+__all__ = (
+    "Bot",
+)
 
 
 abs_path = Path(__file__).parent.resolve()
@@ -86,6 +92,9 @@ class Bot(commands.Bot):
             return None
         
         report_guild = discord.utils.get(self.guilds, id=self.config["report_guild_id"])
+
+        assert report_guild
+
         await interaction.response.send_modal(ReportUserModal(member, self.config["report_channel_id"], report_guild))
 
 
@@ -103,7 +112,9 @@ class Bot(commands.Bot):
 
 
     async def on_ready(self) -> None:
-        self.log.info(f"Bot has connected (Guilds: {len(self.guilds)}) (Bot Username: {self.user.name}#{self.user.discriminator}) (Bot ID: {self.user.id}).")
+        assert self.user
+
+        self.log.info(f"Bot has connected (Guilds: {len(self.guilds)}) (Bot Username: {self.user}) (Bot ID: {self.user.id}).")
         runtime = discord.utils.utcnow() - self.uptime
         self.log.info(f"connected after {runtime.total_seconds():.2f} seconds.")
 
@@ -114,15 +125,18 @@ class Bot(commands.Bot):
 
 # ungrouped commands
 @commands.command()
-async def help(ctx: commands.Context) -> None:
+async def help(ctx: Context) -> None:
     """Returns a link to the list of features the bot has."""
     await ctx.send("Here's the list of features:\nhttps://github.com/Isaglish/fanweek-oddbot#features")
 
 
 @commands.is_owner()
 @commands.command()
-async def sync(ctx: commands.Context, option: Optional[Literal["~", "*", "^"]] = None) -> None:
+async def sync(ctx: Context, option: Optional[Literal["~", "*", "^"]] = None) -> None:
     """Syncs all app commands to the server"""
+
+    assert ctx.guild
+
     if option == "~":
         synced = await ctx.bot.tree.sync(guild=ctx.guild)
 

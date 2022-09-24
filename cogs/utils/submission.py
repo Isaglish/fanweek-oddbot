@@ -9,54 +9,68 @@ from typing import Optional, Any
 
 import discord
 import aiohttp
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
-from .database import Database
-from .embed import create_embed_with_author
+from cogs.utils.views import Confirm
+from cogs.utils.database import Database
+from cogs.utils.embed import create_embed_with_author
 
 
 __all__ = (
     "get_game_attrs",
     "check_game_exists",
     "create_submissions_embed",
-    "handle_unsubmit_confirm_view"
+    "handle_confirm_view"
 )
 
 
 async def get_game_attrs(link: str) -> dict[str, Any]:
-    async with aiohttp.ClientSession() as session:
-        async with session.get(link) as response:
-            r = await response.text()
-            doc = BeautifulSoup(r, "html.parser")
-            title = doc.find("title").text
-            author = doc.find("p", class_="author").text
-            image_url = doc.find("meta", attrs={"property": "og:image"}).attrs["content"]
-            description = doc.find("meta", attrs={"name": "description"}).attrs["content"]
+    async with aiohttp.ClientSession() as session, session.get(link) as response:
+        r = await response.text()
+        doc = BeautifulSoup(r, "html.parser")
+
+        title = doc.find("title")
+        title = getattr(title, "text", title)
+
+        author = doc.find("p", class_="author")
+
+        image_url = doc.find("meta", attrs={"property": "og:image"})
+        description = doc.find("meta", attrs={"name": "description"})
+
+        assert isinstance(image_url, Tag)
+        assert isinstance(description, Tag)
+
+        image_url = image_url.attrs["content"]
+        description = description.attrs["content"]
 
     return {"title": title, "image_url": image_url, "description": description, "author": author}
 
 
-async def check_game_exists(identifier: str) -> bool:
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"https://www.fancade.com/images/{identifier}.jpg") as response:
-            try:
-                r = await response.text()
-                doc = BeautifulSoup(r, "html.parser")
-                page_not_found = doc.find("h1").text
+async def check_game_exists(identifier: str) -> bool | None:
+    async with aiohttp.ClientSession() as session, session.get(f"https://www.fancade.com/images/{identifier}.jpg") as response:
+        try:
+            r = await response.text()
+            doc = BeautifulSoup(r, "html.parser")
+            page_not_found = doc.find("h1")
+            page_not_found = getattr(page_not_found, "text", page_not_found)
 
-                if page_not_found == "Page Not Found":
-                    return False
+            if page_not_found == "Page Not Found":
+                return False
 
-            except UnicodeDecodeError:
-                return True
+        except UnicodeDecodeError:
+            return True
 
 
 async def create_submissions_embed(
     interaction: discord.Interaction,
     documents: list[dict[str, Any]],
-    member: Optional[discord.Member] = None,
+    member: Optional[discord.Member | discord.User] = None,
     show_all: bool = True
 ) -> list[discord.Embed]:
+
+    assert interaction.guild
+    assert interaction.guild.icon
+
     embeds = []
     k = 10
     for i in range(0, len(documents), 10):
@@ -100,7 +114,7 @@ async def handle_confirm_view(
     config: dict[str, Any],
     db: Database,
     interaction: discord.Interaction,
-    view: discord.ui.View,
+    view: Confirm,
     post: dict[str, Any],
     documents: dict[str, Any] | list[dict[str, Any]],
     success_message: Optional[str] = None,
@@ -108,6 +122,7 @@ async def handle_confirm_view(
 ) -> None:
 
     if not delete_many:
+        assert isinstance(documents, dict)
         confirm_message = f"{config['loading_emoji']} Deleting submission..."
         success_message = f"The game **{documents['title']}** has been removed from the database."
     else:
