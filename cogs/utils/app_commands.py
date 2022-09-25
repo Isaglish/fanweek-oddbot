@@ -46,8 +46,8 @@ class Group(app_commands.Group):
 
         elif isinstance(error, MissingPermission):
             await send_error_embed(
-                interaction,
-                f"You can't do that since you're missing `{error.missing_permission}` permission."
+                interaction=interaction,
+                message=f"You can't do that since you're missing `{error.missing_permission}` permission."
             )
 
         else:
