@@ -46,7 +46,7 @@ async def get_game_attrs(link: str) -> dict[str, Any]:
     return {"title": title, "image_url": image_url, "description": description, "author": author}
 
 
-async def check_game_exists(identifier: str) -> bool | None:
+async def check_game_exists(identifier: str) -> bool:
     async with aiohttp.ClientSession() as session, session.get(f"https://www.fancade.com/images/{identifier}.jpg") as response:
         try:
             r = await response.text()
@@ -59,6 +59,8 @@ async def check_game_exists(identifier: str) -> bool | None:
 
         except UnicodeDecodeError:
             return True
+
+    return False
 
 
 async def create_submissions_embed(
