@@ -94,7 +94,6 @@ class Submission(commands.Cog):
             raise errors.VoidGameError("Hmm.. It seems like that game doesn't exist.")
 
         if member is None or member == interaction.user:
-
             post = {
                 "guild_id": interaction.guild_id,
                 "author_id": interaction.user.id,
@@ -105,11 +104,9 @@ class Submission(commands.Cog):
 
             embed.description = f"{interaction.user.mention}, your game **{game_attrs['title']}** was submitted successfully."
             embed.set_thumbnail(url=game_attrs["image_url"])
-            await interaction.edit_original_response(embed=embed)
 
-        elif member is not None or member != interaction.user:
+        else:
             assert member.avatar
-            
             post = {
                 "guild_id": interaction.guild_id,
                 "author_id": member.id,
@@ -121,7 +118,8 @@ class Submission(commands.Cog):
             embed.description = f"{interaction.user.mention}, the game **{game_attrs['title']}** was submitted successfully."
             embed.set_thumbnail(url=game_attrs["image_url"])
             embed.set_footer(text=f"Submitted for {member}", icon_url=member.avatar.url)
-            await interaction.edit_original_response(embed=embed)
+
+        await interaction.edit_original_response(embed=embed)
 
 
     @submissions_group.command(name="unsubmit", description="Unsubmits your game from the database")
@@ -319,7 +317,7 @@ class Submission(commands.Cog):
     @app_commands.command(name="getsource", description="Gets the source of the file and sends it to you.")
     @app_commands.describe(file_name="The name of the file you want to get the source of.")
     async def get_source(self, interaction: discord.Interaction, file_name: str) -> None:
-        if not file_name in self.open_source_files:
+        if file_name not in self.open_source_files:
             raise errors.FileForbiddenAccess("Sorry, but you either can't access that file or it doesn't exist.")
 
         with open(file_name, "r") as f:
