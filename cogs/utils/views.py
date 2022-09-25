@@ -39,11 +39,11 @@ class Confirm(discord.ui.View):
 
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        if self.author == interaction.user:
-            return True
-        else:
-            await interaction.response.send_message("You don't have the permission to do that.", ephemeral=True)
+        if self.author != interaction.user:
             return False
+           
+        await interaction.response.send_message("You don't have the permission to do that.", ephemeral=True)
+        return True
 
 
 class EmbedPaginator(discord.ui.View):
@@ -84,8 +84,8 @@ class EmbedPaginator(discord.ui.View):
 
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        if self.author == interaction.user:
-            return True
-        else:
-            await interaction.response.send_message("You don't have the permission to do that.", ephemeral=True)
+        if self.author != interaction.user:
             return False
+
+        await interaction.response.send_message("You don't have the permission to do that.", ephemeral=True)
+        return True
