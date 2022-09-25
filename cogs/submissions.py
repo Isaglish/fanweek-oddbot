@@ -19,7 +19,7 @@ from cogs.utils.database import Database
 from cogs.utils.views import Confirm, EmbedPaginator
 
 if TYPE_CHECKING:
-    from ..bot import Bot
+    from bot import Bot
 
 
 class Submission(commands.Cog):
