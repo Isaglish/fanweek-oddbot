@@ -152,7 +152,12 @@ class Submission(commands.Cog):
             await interaction.response.send_message(embed=embed, view=view)
 
             await utils.submission.handle_confirm_view(
-                self.bot.config, self.db, interaction, view, {"guild_id": interaction.guild.id, "link": link}, document
+                config=self.bot.config,
+                db=self.db,
+                interaction=interaction,
+                view=view,
+                post={"guild_id": interaction.guild.id, "link": link},
+                documents=document
             )
 
         if author.id == interaction.user.id:
@@ -164,7 +169,12 @@ class Submission(commands.Cog):
             await interaction.response.send_message(embed=embed, view=view)
 
             await utils.submission.handle_confirm_view(
-                self.bot.config, self.db, interaction, view, {"guild_id": interaction.guild.id, "link": link}, document
+                config=self.bot.config,
+                db=self.db,
+                interaction=interaction,
+                view=view,
+                post={"guild_id": interaction.guild.id, "link": link},
+                documents=document
             )
 
 
@@ -310,7 +320,14 @@ class Submission(commands.Cog):
         await interaction.response.send_message(embed=embed, view=view)
 
         await utils.submission.handle_confirm_view(
-            self.bot.config, self.db, interaction, view, post, documents, success_message, True
+            config=self.bot.config,
+            db=self.db,
+            interaction=interaction,
+            view=view,
+            post=post,
+            documents=documents,
+            success_message=success_message,
+            delete_many=True
         )
 
 
