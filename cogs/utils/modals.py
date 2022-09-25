@@ -55,9 +55,9 @@ class ReportUserModal(discord.ui.Modal):
         assert isinstance(report_channel, discord.TextChannel)
 
         embed = create_embed_with_author(
-            discord.Color.red(),
-            f"**Reported User**: {self.member.mention}\n**User ID**: {self.member.id}\n\n**Reason for reporting**: {self.name.value}\n**Description**: {self.description.value}",
-            interaction.user
+            color=discord.Color.red(),
+            description=f"**Reported User**: {self.member.mention}\n**User ID**: {self.member.id}\n\n**Reason for reporting**: {self.name.value}\n**Description**: {self.description.value}",
+            author=interaction.user
         )
         await report_channel.send(embed=embed)
 

@@ -27,7 +27,6 @@ def create_embed_with_author(
             raise TypeError("Author doesn't have 'avatar' attribute.")
 
         assert author.avatar
-
         author_icon_url = author.avatar.url
 
     embed = discord.Embed(color=color, description=description)
@@ -38,9 +37,9 @@ def create_embed_with_author(
 
 async def send_error_embed(interaction: discord.Interaction, message: str) -> None:
     embed = create_embed_with_author(
-        discord.Color.red(),
-        message,
-        interaction.user
+        color=discord.Color.red(),
+        description=message,
+        author=interaction.user
     )
     try:
         await interaction.response.send_message(embed=embed)

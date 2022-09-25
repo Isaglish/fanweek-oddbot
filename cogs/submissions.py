@@ -58,9 +58,9 @@ class Submission(commands.Cog):
         assert interaction.guild
 
         embed = utils.embed.create_embed_with_author(
-                discord.Color.blue(),
-                f"{self.bot.config['loading_emoji']} Processing submission...",
-                interaction.user
+                color=discord.Color.blue(),
+                description=f"{self.bot.config['loading_emoji']} Processing submission...",
+                author=interaction.user
             )
         await interaction.response.send_message(embed=embed)
 
@@ -145,9 +145,9 @@ class Submission(commands.Cog):
                 errors.MissingPermission("Manage Server")
 
             embed = utils.embed.create_embed_with_author(
-                discord.Color.orange(),
-                f"This will delete the submission **{document['title']}** which was submitted by **{author}**. Are you sure you wanna proceed?",
-                interaction.user
+                color=discord.Color.orange(),
+                description=f"This will delete the submission **{document['title']}** which was submitted by **{author}**. Are you sure you wanna proceed?",
+                author=interaction.user
             )
             await interaction.response.send_message(embed=embed, view=view)
 
@@ -157,9 +157,9 @@ class Submission(commands.Cog):
 
         if author.id == interaction.user.id:
             embed = utils.embed.create_embed_with_author(
-                discord.Color.orange(),
-                f"This will delete your submission **{document['title']}**. Are you sure you wanna proceed?",
-                interaction.user
+                color=discord.Color.orange(),
+                description=f"This will delete your submission **{document['title']}**. Are you sure you wanna proceed?",
+                author=interaction.user
             )
             await interaction.response.send_message(embed=embed, view=view)
 
@@ -235,9 +235,9 @@ class Submission(commands.Cog):
             raise errors.NoSubmissionError(no_submission_message)
 
         embed = utils.embed.create_embed_with_author(
-            discord.Color.blue(),
-            f"{self.bot.config['loading_emoji']} Loading submissions...",
-            interaction.user
+            color=discord.Color.blue(),
+            description=f"{self.bot.config['loading_emoji']} Loading submissions...",
+            author=interaction.user
         )
         await interaction.response.send_message(embed=embed)
 
@@ -303,9 +303,9 @@ class Submission(commands.Cog):
         view = Confirm(interaction.user)
 
         embed = utils.embed.create_embed_with_author(
-            discord.Color.orange(),
-            confirm_message,
-            interaction.user
+            color=discord.Color.orange(),
+            description=confirm_message,
+            author=interaction.user
         )
         await interaction.response.send_message(embed=embed, view=view)
 
