@@ -80,9 +80,8 @@ class Submission(commands.Cog):
                 f"The game **{document['title']}** has already been submitted by **{author}**."
             )
 
-        game_identifier_len = 16
         game_identifier = link[25:]
-        if len(game_identifier) != game_identifier_len:
+        if len(game_identifier) != 16:
             raise errors.InvalidLinkError("That is an invalid link.")
 
         game_exists = await utils.submission.check_game_exists(game_identifier)
