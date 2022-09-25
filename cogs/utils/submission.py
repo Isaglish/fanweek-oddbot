@@ -85,28 +85,16 @@ async def create_submissions_embed(
             number += 1
             user = await interaction.guild.fetch_member(submission["author_id"])
 
-            if show_all:
-                infos.append(f"**{number}.** [{submission['title']}]({submission['link']}) • {user}")
-            else:
-                infos.append(f"**{number}.** [{submission['title']}]({submission['link']})")
+            infos.append(f"**{number}.** [{submission['title']}]({submission['link']}){f' • {user}' if show_all else ''}")
 
         info = "\n".join(infos)
 
-        if show_all:
-            embed = create_embed_with_author(
-                discord.Color.blue(),
-                f"**Showing all submissions:**\n\n{info}",
-                f"{interaction.guild} Submissions",
-                interaction.guild.icon.url
-            )
-        else:
-            embed = create_embed_with_author(
-                discord.Color.blue(),
-                f"**Showing all of {member}'s submissions:**\n\n{info}",
-                interaction.user,
-                interaction.guild.icon.url
-            )
-
+        embed = create_embed_with_author(
+            color=discord.Color.blue(),
+            description=f"**Showing all submissions:**\n\n{info}" if show_all else f"**Showing all of {member}'s submissions:**\n\n{info}",
+            author=f"{interaction.guild} Submissions" if show_all else interaction.user,
+            author_icon_url=interaction.guild.icon.url
+        )
         embeds.append(embed)
 
     return embeds
@@ -123,28 +111,25 @@ async def handle_confirm_view(
     delete_many: bool = False
 ) -> None:
 
-    if not delete_many:
-        assert isinstance(documents, dict)
-        confirm_message = f"{config['loading_emoji']} Deleting submission..."
+    confirm_message = f"{config['loading_emoji']} Deleting submission{'s' if delete_many else ''}..."
+
+    if isinstance(documents, dict):
         success_message = f"The game **{documents['title']}** has been removed from the database."
-    else:
-        confirm_message = f"{config['loading_emoji']} Deleting submissions..."
-        success_message = success_message
 
     await view.wait()
     if view.value is None:
         embed = create_embed_with_author(
-            discord.Color.red(),
-            "You took too long to respond.",
-            interaction.user
+            color=discord.Color.red(),
+            description="You took too long to respond.",
+            author=interaction.user
         )
         await interaction.edit_original_response(embed=embed)
 
     elif view.value:
         embed = create_embed_with_author(
-            discord.Color.blue(),
-            confirm_message,
-            interaction.user
+            color=discord.Color.blue(),
+            description=confirm_message,
+            author=interaction.user
         )
         await interaction.edit_original_response(embed=embed, view=None)
 
@@ -160,8 +145,8 @@ async def handle_confirm_view(
 
     else:
         embed = create_embed_with_author(
-            discord.Color.red(),
-            "Command has been cancelled.",
-            interaction.user
+            color=discord.Color.red(),
+            description="Command has been cancelled.",
+            author=interaction.user
         )
         await interaction.edit_original_response(embed=embed, view=None)
