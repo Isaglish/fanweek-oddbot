@@ -22,11 +22,10 @@ class ReportUserModal(discord.ui.Modal):
     __slots__ = "member", "channel_id", "guild"
 
     def __init__(self, member: discord.Member, channel_id: int, guild: discord.Guild) -> None:
+        super().__init__(title="Report User", custom_id="report_user_modal")
         self.member = member
         self.channel_id = channel_id
         self.guild = guild
-
-        super().__init__(title="Report User", custom_id="report_user_modal")
 
 
     name = discord.ui.TextInput(
