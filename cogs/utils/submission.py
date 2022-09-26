@@ -78,13 +78,11 @@ async def create_submissions_embed(
     for i in range(0, len(documents), 10):
         current = documents[i:k]
         k += 10
-
         number = i
         infos = []
         for submission in current:
             number += 1
             user = await interaction.guild.fetch_member(submission["author_id"])
-
             infos.append(f"**{number}.** [{submission['title']}]({submission['link']}){f' • {user}' if show_all else ''}")
 
         info = "\n".join(infos)
@@ -92,8 +90,8 @@ async def create_submissions_embed(
         embed = create_embed_with_author(
             color=discord.Color.blue(),
             description=f"**Showing all submissions:**\n\n{info}" if show_all else f"**Showing all of {member}'s submissions:**\n\n{info}",
-            author=f"{interaction.guild} Submissions" if show_all else interaction.user,
-            author_icon_url=interaction.guild.icon.url
+            author=f"{interaction.guild} Submissions (Total: {len(documents)})" if show_all else interaction.user,
+            author_icon_url=interaction.guild.icon.url if show_all else None
         )
         embeds.append(embed)
 
