@@ -26,10 +26,10 @@ class Submission(commands.Cog):
 
     __slots__ = "bot", "log", "db", "open_source_files"
 
-    def __init__(self, bot: "OddBot") -> None:
+    def __init__(self, bot: "OddBot", db: Database) -> None:
         self.bot = bot
         self.log = bot.log
-        self.db = Database(bot.config, "fanweek", "submissions")
+        self.db = db
         self.open_source_files = bot.config["open_source_files"]
 
 
@@ -347,4 +347,5 @@ class Submission(commands.Cog):
 
 
 async def setup(bot: "OddBot") -> None:
-    await bot.add_cog(Submission(bot))
+    db = Database(bot.config, "fanweek", "submissions")
+    await bot.add_cog(Submission(bot, db))
