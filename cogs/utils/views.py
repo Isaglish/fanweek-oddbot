@@ -5,8 +5,6 @@ Classes for discord views.
 :license: MIT, see LICENSE for more details.
 """
 
-from typing import Any
-
 import discord
 
 
@@ -48,17 +46,25 @@ class Confirm(discord.ui.View):
 
 class EmbedPaginator(discord.ui.View):
 
-    __slots__ = "interaction", "author", "embeds", "documents", "current_page", "max_pages"
+    __slots__ = "interaction", "author", "embeds", "current_page", "max_pages"
 
-    def __init__(self, interaction: discord.Interaction, embeds: list[discord.Embed], documents: list[dict[str, Any]]) -> None:
+    def __init__(self, interaction: discord.Interaction, embeds: list[discord.Embed]) -> None:
         super().__init__(timeout=None)
+        self.current_page = 0
+        self.max_pages = len(embeds)
         self.interaction = interaction
         self.author = interaction.user
         self.embeds = embeds
-        self.documents = documents
 
-        self.current_page = 0
-        self.max_pages = len(embeds)
+
+    @property
+    def index_page(self) -> discord.Embed:
+        if self.max_pages > 1:
+            self.next.disabled = False
+
+        embed = self.embeds[0]
+        embed.set_footer(text=f"Page {self.current_page + 1}/{self.max_pages}")
+        return embed
 
 
     @discord.ui.button(label="Previous Page", style=discord.ButtonStyle.blurple, custom_id="prev_page:button", disabled=True)
@@ -68,7 +74,7 @@ class EmbedPaginator(discord.ui.View):
         self.current_page -= 1
         
         embed = self.embeds[self.current_page]
-        embed.set_footer(text=f"Page {self.current_page + 1}/{self.max_pages} • Total amount of submissions: {len(self.documents)}")
+        embed.set_footer(text=f"Page {self.current_page + 1}/{self.max_pages}")
         await interaction.response.edit_message(embed=embed, view=self)
 
 
@@ -79,8 +85,15 @@ class EmbedPaginator(discord.ui.View):
         self.current_page += 1
 
         embed = self.embeds[self.current_page]
-        embed.set_footer(text=f"Page {self.current_page + 1}/{self.max_pages} • Total amount of submissions: {len(self.documents)}")
+        embed.set_footer(text=f"Page {self.current_page + 1}/{self.max_pages}")
         await interaction.response.edit_message(embed=embed, view=self)
+
+
+    @discord.ui.button(label="Quit", style=discord.ButtonStyle.red, custom_id="quit:button")
+    async def quit_button(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        embed = self.embeds[self.current_page]
+        embed.set_footer(text=f"Page {self.current_page + 1}/{self.max_pages}")
+        await interaction.response.edit_message(embed=embed, view=None)
 
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
