@@ -23,9 +23,9 @@ SOFTWARE.
 """
 
 import logging
-import json
+from typing import Any
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import Literal, Optional
 
 import discord
 from discord.ext import commands
@@ -33,35 +33,35 @@ from discord import app_commands
 
 from cogs.utils import Context
 from cogs.utils.modals import ReportUserModal
+from cogs.utils.dropdown import HelpCommandDropdownView
 
 
 __all__ = (
-    "Bot",
+    "OddBot",
 )
 
 
 abs_path = Path(__file__).parent.resolve()
 
 
-class Bot(commands.Bot):
+class OddBot(commands.Bot):
 
-    def __init__(self) -> None:
+    def __init__(self, config: dict[str, Any], cmd_prefix: str) -> None:
 
         # bot variables
         self.uptime = discord.utils.utcnow()
         self._cogs = [p.stem for p in Path(".").glob("./cogs/*.py")]
-        self.cmd_prefix = "ob."
 
         # logging
         self.log = logging.getLogger("discord")
         self.log.setLevel(logging.INFO)
 
-        self.config = self.load_config()
+        self.config = config
 
         super().__init__(
-            command_prefix=self.cmd_prefix,
+            command_prefix=cmd_prefix,
             owner_ids=self.config["owner_ids"],
-            activity=discord.Activity(type=discord.ActivityType.playing, name="ob.help"),
+            activity=discord.Activity(type=discord.ActivityType.playing, name="/help"),
             intents=discord.Intents.all(),
             help_command=None
         )
@@ -72,29 +72,18 @@ class Bot(commands.Bot):
             callback=self.report_user
         )
         self.tree.add_command(self.report_user_ctx_menu)
-
-        self.add_command(help)
+        self.tree.add_command(help_command)
         self.add_command(sync)
-
-
-    def load_config(self) -> dict[str, Any]:
-        with open("config.json", "r") as f:
-            config = json.load(f)
-
-        return config
 
 
     # context menus
     async def report_user(self, interaction: discord.Interaction, member: discord.Member) -> None:
-
         if member == interaction.user:
             await interaction.response.send_message("Hey! You can't report yourself!", ephemeral=True)
             return None
         
         report_guild = discord.utils.get(self.guilds, id=self.config["report_guild_id"])
-
         assert report_guild
-
         await interaction.response.send_modal(ReportUserModal(member, self.config["report_channel_id"], report_guild))
 
 
@@ -124,12 +113,6 @@ class Bot(commands.Bot):
         
 
 # ungrouped commands
-@commands.command()
-async def help(ctx: Context) -> None:
-    """Returns a link to the list of features the bot has."""
-    await ctx.send("Here's the list of features:\nhttps://github.com/Isaglish/fanweek-oddbot#features")
-
-
 @commands.is_owner()
 @commands.command()
 async def sync(ctx: Context, option: Optional[Literal["~", "*", "^"]] = None) -> None:
@@ -152,4 +135,27 @@ async def sync(ctx: Context, option: Optional[Literal["~", "*", "^"]] = None) ->
     else:
         synced = await ctx.bot.tree.sync()
 
-    await ctx.send(f"Synced {len(synced)} commands {'globally.' if option is None else 'to the current guild.'}")
+    await ctx.send(f"Synced {len(synced)} commands {'globally' if option is None else 'to the current guild'}.")
+
+
+@app_commands.command(name="help", description="A help command that shows all available features.")
+async def help_command(interaction: discord.Interaction):
+
+    description = f"""
+    Hello there! Welcome to the help page.
+
+    Use the dropdown menu below to select a category.
+
+    **Who are you?**
+    I'm a bot made by Isaglish#8034. I was created on
+    <t:1614414925:F>.
+    I was made specifically for Fanweek and for keeping track of your submissions.
+    You could get more information by using the dropdown below.
+
+    I am also open-source so come check out my code on [GitHub](https://github.com/Isaglish/fanweek-oddbot)!
+    """
+    embed = discord.Embed(color=discord.Color.blue(), description=description)
+    embed.set_author(name="Bot Help Page.")
+
+    view = HelpCommandDropdownView()
+    await interaction.response.send_message(embed=embed, view=view)
