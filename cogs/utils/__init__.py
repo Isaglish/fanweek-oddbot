@@ -14,7 +14,7 @@ from . import embed as embed
 from . import submission as submission
 
 if TYPE_CHECKING:
-    from bot import Bot
+    from bot import OddBot
 
 
 __all__ = (
@@ -22,4 +22,4 @@ __all__ = (
 )
 
 
-Context = commands.Context["Bot"]
+Context = commands.Context["OddBot"]
