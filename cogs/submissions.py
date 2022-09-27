@@ -19,14 +19,14 @@ from cogs.utils.database import Database
 from cogs.utils.views import Confirm, EmbedPaginator
 
 if TYPE_CHECKING:
-    from bot import Bot
+    from bot import OddBot
 
 
 class Submission(commands.Cog):
 
     __slots__ = "bot", "log", "db", "open_source_files"
 
-    def __init__(self, bot: "Bot") -> None:
+    def __init__(self, bot: "OddBot") -> None:
         self.bot = bot
         self.log = bot.log
         self.db = Database(bot.config, "fanweek", "submissions")
@@ -58,19 +58,19 @@ class Submission(commands.Cog):
         assert interaction.guild
 
         embed = utils.embed.create_embed_with_author(
-                color=discord.Color.blue(),
-                description=f"{self.bot.config['loading_emoji']} Processing submission...",
-                author=interaction.user
-            )
+            color=discord.Color.blue(),
+            description=f"{self.bot.config['loading_emoji']} Processing submission...",
+            author=interaction.user
+        )
         await interaction.response.send_message(embed=embed)
 
         if not link.startswith("https://play.fancade.com/"):
             raise errors.UnrecognizedLinkError("I don't recognize that link.")
 
-        can_manage_guild: bool = interaction.user.guild_permissions.manage_guild
         document =  await self.db.find_one({"guild_id": interaction.guild_id, "link": link})
         game_attrs = await utils.submission.get_game_attrs(link)
 
+        can_manage_guild = interaction.user.guild_permissions.manage_guild
         if not can_manage_guild and member != interaction.user and member is not None:
             raise errors.MissingPermission("Manage Server")
 
@@ -130,7 +130,6 @@ class Submission(commands.Cog):
         if not link.startswith("https://play.fancade.com/"):
             raise errors.UnrecognizedLinkError("I don't recognize that link.")
 
-        can_manage_guild: bool = interaction.user.guild_permissions.manage_guild
         document = await self.db.find_one({"guild_id": interaction.guild_id, "link": link})
 
         if document is None:
@@ -139,9 +138,10 @@ class Submission(commands.Cog):
         author = await interaction.guild.fetch_member(document["author_id"])
         view = Confirm(interaction.user)
 
+        can_manage_guild = interaction.user.guild_permissions.manage_guild
         if author.id != interaction.user.id:
             if not can_manage_guild:
-                errors.MissingPermission("Manage Server")
+                raise errors.MissingPermission("Manage Server")
 
             embed = utils.embed.create_embed_with_author(
                 color=discord.Color.orange(),
@@ -149,15 +149,6 @@ class Submission(commands.Cog):
                 author=interaction.user
             )
             await interaction.response.send_message(embed=embed, view=view)
-
-            await utils.submission.handle_confirm_view(
-                config=self.bot.config,
-                db=self.db,
-                interaction=interaction,
-                view=view,
-                post={"guild_id": interaction.guild.id, "link": link},
-                documents=document
-            )
 
         if author.id == interaction.user.id:
             embed = utils.embed.create_embed_with_author(
@@ -167,14 +158,14 @@ class Submission(commands.Cog):
             )
             await interaction.response.send_message(embed=embed, view=view)
 
-            await utils.submission.handle_confirm_view(
-                config=self.bot.config,
-                db=self.db,
-                interaction=interaction,
-                view=view,
-                post={"guild_id": interaction.guild.id, "link": link},
-                documents=document
-            )
+        await utils.submission.handle_confirm_view(
+            config=self.bot.config,
+            db=self.db,
+            interaction=interaction,
+            view=view,
+            post={"guild_id": interaction.guild.id, "link": link},
+            documents=document
+        )
 
 
     @unsubmit_command.autocomplete("link")
@@ -251,15 +242,9 @@ class Submission(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
         embeds = await utils.submission.create_submissions_embed(interaction, documents, user, show_all)
-        paginator = EmbedPaginator(interaction, embeds, documents)
-
-        if paginator.max_pages > 1:
-            paginator.next.disabled = False
-
-        embed = embeds[0]
-        embed.set_footer(
-            text=f"Page {paginator.current_page + 1}/{paginator.max_pages} • Total amount of submissions: {len(documents)}"
-        )
+        paginator = EmbedPaginator(interaction, embeds)
+        
+        embed = paginator.index_page
         await interaction.edit_original_response(embed=embed, view=paginator)
             
 
@@ -361,5 +346,5 @@ class Submission(commands.Cog):
             raise error
 
 
-async def setup(bot: "Bot") -> None:
+async def setup(bot: "OddBot") -> None:
     await bot.add_cog(Submission(bot))
