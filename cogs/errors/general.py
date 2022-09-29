@@ -11,9 +11,25 @@ from discord import app_commands
 
 
 __all__ = (
+    "MessageError",
     "MissingPermission",
     "FileForbiddenAccess"
 )
+
+
+class MessageError(app_commands.AppCommandError):
+    """Base class for custom errors that have the message attribute."""
+
+    def __init__(self, message: Optional[str] = None) -> None:
+        self.message = message
+        super().__init__(self.message)
+
+
+class FileForbiddenAccess(MessageError):
+    """An exception raised when you don't have access to the file."""
+
+    def __init__(self, message: Optional[str] = None) -> None:
+        super().__init__(message or "You don't have access to that file.")
 
 
 class MissingPermission(app_commands.AppCommandError):
@@ -24,9 +40,3 @@ class MissingPermission(app_commands.AppCommandError):
         super().__init__(f"Member missing {missing_permission} permission.")
 
 
-class FileForbiddenAccess(app_commands.AppCommandError):
-    """An exception raised when you don't have access to the file."""
-
-    def __init__(self, message: Optional[str] = None) -> None:
-        self.message = message or "You don't have access to that file."
-        super().__init__(self.message)

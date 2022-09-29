@@ -7,8 +7,7 @@ Submission Custom Exceptions.
 
 from typing import Optional
 
-from discord import app_commands
-
+from cogs.errors import MessageError
 
 __all__ = (
     "SubmissionAlreadyExists",
@@ -18,33 +17,29 @@ __all__ = (
 )
 
 
-class SubmissionAlreadyExists(app_commands.AppCommandError):
+class SubmissionAlreadyExists(MessageError):
     """An exception raised when the submission already exists."""
 
     def __init__(self, message: Optional[str] = None) -> None:
-        self.message = message or "Submission already exists."
-        super().__init__(self.message)
+        super().__init__(message or "Submission already exists.")
 
 
-class SubmissionNotInDatabase(app_commands.AppCommandError):
+class SubmissionNotInDatabase(MessageError):
     """An exception raised when the submission is not in the database."""
 
     def __init__(self, message: Optional[str] = None) -> None:
-        self.message = message or "Submission not in database."
-        super().__init__(self.message)
+        super().__init__(message or "Submission not in database.")
 
 
-class NoSubmissionError(app_commands.AppCommandError):
+class NoSubmissionError(MessageError):
     """An exception raised when there is no submission."""
 
     def __init__(self, message: Optional[str] = None) -> None:
-        self.message = message or "No Submission."
-        super().__init__(self.message)
+        super().__init__(message or "No Submission.")
 
 
-class VoidGameError(app_commands.AppCommandError):
+class VoidGameError(MessageError):
     """An exception raised when the game doesn't exist."""
 
     def __init__(self, message: Optional[str] = None) -> None:
-        self.message = message or "Game doesn't exist."
-        super().__init__(self.message)
+        super().__init__(message or "Game doesn't exist.")

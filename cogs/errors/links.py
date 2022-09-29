@@ -7,7 +7,7 @@ Links Custom Exceptions.
 
 from typing import Optional
 
-from discord import app_commands
+from cogs.errors import MessageError
 
 
 __all__ = (
@@ -16,17 +16,15 @@ __all__ = (
 )
 
 
-class UnrecognizedLinkError(app_commands.AppCommandError):
+class UnrecognizedLinkError(MessageError):
     """An exception raised when the provided url is not recognized as Fancade."""
     
     def __init__(self, message: Optional[str] = None) -> None:
-        self.message = message or "Unrecognized link provided. "
-        super().__init__(self.message)
+        super().__init__(message or "Unrecognized link provided.")
 
 
-class InvalidLinkError(app_commands.AppCommandError):
+class InvalidLinkError(MessageError):
     """An exception raised when the provided url is not a valid Fancade link."""
 
     def __init__(self, message: Optional[str] = None) -> None:
-        self.message = message or "Invalid link provided."
-        super().__init__(self.message)
+        super().__init__(message or "Invalid link provided.")
