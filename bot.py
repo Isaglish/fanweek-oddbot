@@ -51,6 +51,7 @@ class OddBot(commands.Bot):
         # bot variables
         self.uptime = discord.utils.utcnow()
         self._cogs = [p.stem for p in Path(".").glob("./cogs/*.py")]
+        self.cmd_prefix = cmd_prefix
 
         # logging
         self.log = logging.getLogger("discord")
@@ -157,5 +158,5 @@ async def help_command(interaction: discord.Interaction):
     embed = discord.Embed(color=discord.Color.blue(), description=description)
     embed.set_author(name="Bot Help Page.")
 
-    view = HelpCommandDropdownView()
+    view = HelpCommandDropdownView(interaction.user)
     await interaction.response.send_message(embed=embed, view=view)

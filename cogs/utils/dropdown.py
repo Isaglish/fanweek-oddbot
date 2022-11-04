@@ -5,9 +5,20 @@ Select menu objects for dropdowns.
 :license: MIT, see LICENSE for more details.
 """
 
+from typing import TYPE_CHECKING
+
 import discord
 
 from cogs.utils.embed import create_embed_with_author
+
+if TYPE_CHECKING:
+    from bot import OddBot
+
+
+__all__ = (
+    "HelpCommandDropdown",
+    "HelpCommandDropdownView"
+)
 
 
 class HelpCommandDropdown(discord.ui.Select):
@@ -20,38 +31,56 @@ class HelpCommandDropdown(discord.ui.Select):
         ]
         super().__init__(placeholder="Select a category...", min_values=1, max_values=1, options=options)
 
+        self.text_commands = [
+            "sync [option: None]",
+            "jishaku"
+        ]
+
     
     async def callback(self, interaction: discord.Interaction) -> None:
+        bot: OddBot = interaction.client # type: ignore
+
         selected = self.values[0]
         if selected == "Text commands":
+            commands = [f"**{i+1}.** `{bot.cmd_prefix}{cmd}`" for i, cmd in enumerate(self.text_commands)]
 
             embed = create_embed_with_author(
                 color=discord.Color.blue(),
-                description="**Text Commands:**\n\n**1.** `ob.sync [option]`\n**2.** `ob.jsk [command] | ob.jishaku [command]`",
+                description="\n".join(commands),
                 author=interaction.user
             )
 
         elif selected == "Slash commands":
+            commands = [f"**{i+1}.** `/{cmd.qualified_name}`" for i, cmd in enumerate(bot.tree.walk_commands())]
             embed = create_embed_with_author(
                 color=discord.Color.blue(),
-                description="**Slash Commands:**\n\n**1.** `/submissions submit <link> [member]`\n**2.** `/submissions unsubmit <link>`\n**3.** `/submissions show [all]`\n**4.** `/submissions clear [member] [all]`\n**5.** `/help`\n**6.** `/getsource <file_name>`",
+                description="\n".join(commands),
                 author=interaction.user
             )
 
         else:
             embed = create_embed_with_author(
                 color=discord.Color.blue(),
-                description="**Context Menus:**\n\n**1.** `Report User`",
+                description="**1.** `Report User`",
                 author=interaction.user
             )
 
         assert embed.description
         embed.description += "\n\nCheckout the features here on [GitHub](https://github.com/Isaglish/fanweek-oddbot#features)."
-        await interaction.response.edit_message(embed=embed, view=HelpCommandDropdownView())
+        await interaction.response.edit_message(embed=embed, view=HelpCommandDropdownView(interaction.user))
 
 
 class HelpCommandDropdownView(discord.ui.View):
-    def __init__(self):
+    def __init__(self, author: discord.Member | discord.User):
+        self.author = author
         super().__init__()
         self.add_item(HelpCommandDropdown())
 
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if self.author != interaction.user:
+            await interaction.response.send_message("You don't have the permission to do that.", ephemeral=True)
+            return False
+
+        return True
+        
