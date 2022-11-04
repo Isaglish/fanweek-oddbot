@@ -42,6 +42,7 @@ class Group(app_commands.Group):
             SubmissionNotInDatabase |
             NoSubmissionError
         ):
+            assert error.message
             await send_error_embed(interaction, error.message)
 
         elif isinstance(error, MissingPermission):

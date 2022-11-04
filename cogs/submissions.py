@@ -341,6 +341,7 @@ class Submission(commands.Cog):
     ) -> None:
 
         if isinstance(error, errors.FileForbiddenAccess):
+            assert error.message
             await utils.embed.send_error_embed(interaction, error.message)
         else:
             raise error
