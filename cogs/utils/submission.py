@@ -18,7 +18,7 @@ from cogs.utils.embed import create_embed_with_author
 
 __all__ = (
     "get_game_attrs",
-    "check_game_exists",
+    "check_game_existence",
     "create_submissions_embed",
     "handle_confirm_view"
 )
@@ -46,7 +46,7 @@ async def get_game_attrs(link: str) -> dict[str, Any]:
     return {"title": title, "image_url": image_url, "description": description, "author": author}
 
 
-async def check_game_exists(identifier: str) -> bool:
+async def check_game_existence(identifier: str) -> bool:
     async with aiohttp.ClientSession() as session, session.get(f"https://www.fancade.com/images/{identifier}.jpg") as response:
         try:
             r = await response.text()
@@ -81,10 +81,8 @@ async def create_submissions_embed(
         end += 10
         
         items = []
-        item_index = start
-        for submission in current_submissions:
-            item_index += 1 
-            user = await interaction.guild.fetch_member(submission["author_id"])
+        for item_index, submission in enumerate(current_submissions, start=start+1):
+            user = interaction.guild.get_member(submission["author_id"])
             items.append(f"**{item_index}.** [{submission['title']}]({submission['link']}){f' • {user}' if show_all else ''}")
 
         item = "\n".join(items)
