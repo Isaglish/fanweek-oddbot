@@ -74,22 +74,24 @@ async def create_submissions_embed(
     assert interaction.guild.icon
 
     embeds = []
-    k = 10
-    for i in range(0, len(documents), 10):
-        current = documents[i:k]
-        k += 10
-        number = i
-        infos = []
-        for submission in current:
-            number += 1
-            user = await interaction.guild.fetch_member(submission["author_id"])
-            infos.append(f"**{number}.** [{submission['title']}]({submission['link']}){f' • {user}' if show_all else ''}")
 
-        info = "\n".join(infos)
+    end = 10
+    for start in range(0, len(documents), 10):
+        current_submissions = documents[start:end]
+        end += 10
+        
+        items = []
+        item_index = start
+        for submission in current_submissions:
+            item_index += 1 
+            user = await interaction.guild.fetch_member(submission["author_id"])
+            items.append(f"**{item_index}.** [{submission['title']}]({submission['link']}){f' • {user}' if show_all else ''}")
+
+        item = "\n".join(items)
 
         embed = create_embed_with_author(
             color=discord.Color.blue(),
-            description=f"**Showing all submissions:**\n\n{info}" if show_all else f"**Showing all of {member}'s submissions:**\n\n{info}",
+            description=f"**Showing all submissions:**\n\n{item}" if show_all else f"**Showing all of {member}'s submissions:**\n\n{item}",
             author=f"{interaction.guild} Submissions (Total: {len(documents)})" if show_all else interaction.user,
             author_icon_url=interaction.guild.icon.url if show_all else None
         )
