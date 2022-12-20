@@ -84,7 +84,7 @@ class Submission(commands.Cog):
         if len(game_identifier) != 16:
             raise errors.InvalidLinkError("That is an invalid link.")
 
-        game_exists = await utils.submission.check_game_exists(game_identifier)
+        game_exists = await utils.submission.check_game_existence(game_identifier)
         if game_exists and game_attrs["title"] == "Fancade":  # has an image but no title
             identifier = "".join(random.choices(string.ascii_letters, k=6))
             game_attrs["title"] = f"?ULG__{identifier}?"
