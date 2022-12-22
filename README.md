@@ -69,3 +69,4 @@ If you find any bugs, issues, or unexpected behavior while using the bot, you sh
 ## Links
 - **License:** [MIT](https://github.com/Isaglish/fanweek-oddbot/blob/main/LICENSE)
 - **Repository:** [GitHub](https://github.com/Isaglish/fanweek-oddbot)
+- **Trello (Keep Track of The Project):** [Trello](https://trello.com/b/rRpugSu1/fanweek-oddbot)
