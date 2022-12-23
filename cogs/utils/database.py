@@ -17,7 +17,7 @@ __all__ = (
 
 class Database:
 
-    __slots__ = "config", "task", "pool"
+    __slots__ = "config", "pool"
 
     def __init__(self, config: dict[str, Any]) -> None:
         self.config = config
