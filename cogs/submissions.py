@@ -15,7 +15,6 @@ from discord import app_commands
 from discord.ext import commands
 
 from cogs import utils, errors
-from cogs.utils.database import Database
 from cogs.utils.views import Confirm, EmbedPaginator
 
 if TYPE_CHECKING:
@@ -24,12 +23,12 @@ if TYPE_CHECKING:
 
 class Submission(commands.Cog):
 
-    __slots__ = "bot", "log", "db", "open_source_files"
+    __slots__ = "bot", "log", "open_source_files"
 
-    def __init__(self, bot: "OddBot", db: Database) -> None:
+    def __init__(self, bot: "OddBot") -> None:
         self.bot = bot
         self.log = bot.log
-        self.db = db
+        self.db = self.bot.db
         self.open_source_files = bot.config["open_source_files"]
 
 
@@ -44,13 +43,13 @@ class Submission(commands.Cog):
 
     @submissions_group.command(name="submit", description="Submits your game to the database")
     @app_commands.describe(
-        link="Your game's link, you can get this by sharing your game in Fancade.",
+        game_url="Your game's url, you can get this by sharing your game in Fancade.",
         member="The member you want to submit for. This requires Manage Server permission."
     )
     async def submit_command(
         self,
         interaction: discord.Interaction,
-        link: str,
+        game_url: str,
         member: Optional[discord.Member] = None
     ) -> None:
 
@@ -64,55 +63,66 @@ class Submission(commands.Cog):
         )
         await interaction.response.send_message(embed=embed)
 
-        if not link.startswith("https://play.fancade.com/"):
-            raise errors.UnrecognizedLinkError("I don't recognize that link.")
+        if not game_url.startswith("https://play.fancade.com/"):
+            raise errors.UnrecognizedURLError("I don't recognize that URL.")
 
-        document =  await self.db.find_one({"guild_id": interaction.guild_id, "link": link})
-        game_attrs = await utils.submission.get_game_attrs(link)
+
+        async with self.db.pool.acquire() as connection:
+            result = await connection.fetchrow(
+                """
+                SELECT author_id, game_title FROM submission
+                WHERE guild_id=$1 AND game_url=$2
+                """,
+                interaction.guild_id,
+                game_url
+            )
+        game_attrs = await utils.submission.get_game_attrs(game_url)
 
         can_manage_guild = interaction.user.guild_permissions.manage_guild
         if not can_manage_guild and member != interaction.user and member is not None:
             raise errors.MissingPermission("Manage Server")
 
-        if document is not None:
-            author: discord.Member = await interaction.guild.fetch_member(document["author_id"])
+        if result is not None:
+            author = interaction.guild.get_member(result["author_id"])
             raise errors.SubmissionAlreadyExists(
-                f"The game **{document['title']}** has already been submitted by **{author}**."
+                f"The game **{result['game_title']}** has already been submitted by **{author}**."
             )
 
-        game_identifier = link[25:]
+        game_identifier = game_url[25:]
         if len(game_identifier) != 16:
-            raise errors.InvalidLinkError("That is an invalid link.")
+            raise errors.InvalidURLError("That is an invalid URL.")
 
         game_exists = await utils.submission.check_game_existence(game_identifier)
         if game_exists and game_attrs["title"] == "Fancade":  # has an image but no title
             identifier = "".join(random.choices(string.ascii_letters, k=6))
-            game_attrs["title"] = f"?ULG__{identifier}?"
+            game_attrs["title"] = f"?ULG_{identifier}?"
 
         elif not game_exists and game_attrs["title"] == "Fancade":  # has no image and no title
             raise errors.VoidGameError("Hmm.. It seems like that game doesn't exist.")
 
         if member is None or member == interaction.user:
-            post = {
-                "guild_id": interaction.guild_id,
-                "author_id": interaction.user.id,
-                "title": game_attrs["title"],
-                "link": link
-            }
-            await self.db.insert_one(post)
+            async with self.db.pool.acquire() as connection:
+                await connection.execute(
+                    "INSERT INTO submission (author_id, guild_id, game_title, game_url) VALUES ($1, $2, $3, $4)",
+                    interaction.user.id,
+                    interaction.guild_id,
+                    game_attrs["title"],
+                    game_url
+                )
 
             embed.description = f"{interaction.user.mention}, your game **{game_attrs['title']}** was submitted successfully."
             embed.set_thumbnail(url=game_attrs["image_url"])
 
         else:
             assert member.avatar
-            post = {
-                "guild_id": interaction.guild_id,
-                "author_id": member.id,
-                "title": game_attrs["title"],
-                "link": link
-            }
-            await self.db.insert_one(post)
+            async with self.db.pool.acquire() as connection:
+                await connection.execute(
+                    "INSERT INTO submission (author_id, guild_id, game_title, game_url) VALUES ($1, $2, $3, $4)",
+                    member.id,
+                    interaction.guild_id,
+                    game_attrs["title"],
+                    game_url
+                )
 
             embed.description = f"{interaction.user.mention}, the game **{game_attrs['title']}** was submitted successfully."
             embed.set_thumbnail(url=game_attrs["image_url"])
@@ -122,20 +132,29 @@ class Submission(commands.Cog):
 
 
     @submissions_group.command(name="unsubmit", description="Unsubmits your game from the database")
-    @app_commands.describe(link="Your game's link, you can get this by sharing your game in Fancade.")
-    async def unsubmit_command(self, interaction: discord.Interaction, link: str) -> None:
+    @app_commands.describe(game_url="Your game's URL, you can get this by sharing your game in Fancade.")
+    async def unsubmit_command(self, interaction: discord.Interaction, game_url: str) -> None:
         assert isinstance(interaction.user, discord.Member)
         assert interaction.guild
 
-        if not link.startswith("https://play.fancade.com/"):
-            raise errors.UnrecognizedLinkError("I don't recognize that link.")
+        if not game_url.startswith("https://play.fancade.com/"):
+            raise errors.UnrecognizedURLError("I don't recognize that URL.")
 
-        document = await self.db.find_one({"guild_id": interaction.guild_id, "link": link})
+        async with self.db.pool.acquire() as connection:
+            result = await connection.fetchrow(
+                """
+                SELECT author_id, game_title FROM submission
+                WHERE guild_id=$1 AND game_url=$2
+                """,
+                interaction.guild_id,
+                game_url
+            )
 
-        if document is None:
+        if result is None:
             raise errors.SubmissionNotInDatabase("I can't find that game in the database.")
 
-        author = await interaction.guild.fetch_member(document["author_id"])
+        author = interaction.guild.get_member(result["author_id"])
+        assert author
         view = Confirm(interaction.user)
 
         can_manage_guild = interaction.user.guild_permissions.manage_guild
@@ -145,7 +164,7 @@ class Submission(commands.Cog):
 
             embed = utils.embed.create_embed_with_author(
                 color=discord.Color.orange(),
-                description=f"This will delete the submission **{document['title']}** which was submitted by **{author}**. Are you sure you wanna proceed?",
+                description=f"This will delete the submission **{result['game_title']}** which was submitted by **{author}**. Are you sure you wanna proceed?",
                 author=interaction.user
             )
             await interaction.response.send_message(embed=embed, view=view)
@@ -153,7 +172,7 @@ class Submission(commands.Cog):
         if author.id == interaction.user.id:
             embed = utils.embed.create_embed_with_author(
                 color=discord.Color.orange(),
-                description=f"This will delete your submission **{document['title']}**. Are you sure you wanna proceed?",
+                description=f"This will delete your submission **{result['game_title']}**. Are you sure you wanna proceed?",
                 author=interaction.user
             )
             await interaction.response.send_message(embed=embed, view=view)
@@ -163,12 +182,12 @@ class Submission(commands.Cog):
             db=self.db,
             interaction=interaction,
             view=view,
-            post={"guild_id": interaction.guild.id, "link": link},
-            documents=document
+            query="DELETE FROM submission",
+            results=result
         )
 
 
-    @unsubmit_command.autocomplete("link")
+    @unsubmit_command.autocomplete("game_url")
     async def unsubmit_autocomplete(
         self,
         interaction: discord.Interaction,
@@ -178,21 +197,36 @@ class Submission(commands.Cog):
         assert interaction.guild
 
         if interaction.user.guild_permissions.manage_guild:
-            post = {"title": {"$regex": current}, "guild_id": interaction.guild.id}
-            results = await self.db.find(post)
-            results.sort(key=lambda x: x["author_id"])
+            async with self.db.pool.acquire() as connection:
+                results = await connection.fetch(
+                    """
+                    SELECT * FROM submission
+                    WHERE game_title=$1 AND guild_id=$2
+                    ORDER BY author_id
+                    """,
+                    current,
+                    interaction.guild_id
+                )
             return [
                 app_commands.Choice(
-                    name=f"{result['title']} by {await interaction.guild.fetch_member(result['author_id'])}",
-                    value=result["link"]
+                    name=f"{result['game_title']} by {interaction.guild.get_member(result['author_id'])}",
+                    value=result["game_url"]
                 ) for result in results
             ]
         else:
-            post = {"title": {"$regex": current}, "guild_id": interaction.guild.id, "author_id": interaction.user.id}
-            results = await self.db.find(post)
-            results.sort(key=lambda x: x["author_id"])
+            async with self.db.pool.acquire() as connection:
+                results = await connection.fetch(
+                    """
+                    SELECT * FROM submission
+                    WHERE game_title=$1 AND guild_id=$2 AND author_id=$3
+                    ORDER BY author_id
+                    """,
+                    current,
+                    interaction.guild_id,
+                    interaction.user.id
+                )
             return [
-                app_commands.Choice(name=result['title'], value=result["link"]) for result in results
+                app_commands.Choice(name=result['game_title'], value=result["game_url"]) for result in results
             ]
 
 
@@ -212,26 +246,46 @@ class Submission(commands.Cog):
         assert interaction.guild
 
         if show_all:
-            post = {"guild_id": interaction.guild.id}
+            async with self.db.pool.acquire() as connection:
+                results = await connection.fetch(
+                    """SELECT * FROM submission
+                    WHERE guild_id=$1
+                    ORDER BY author_id
+                    """,
+                    interaction.guild_id
+                )
             no_submission_message = "Hmm, it seems like nobody has submitted anything yet."
             user = None
 
         elif member is None or member == interaction.user:
-            post = {"guild_id": interaction.guild.id, "author_id": interaction.user.id}
+            async with self.db.pool.acquire() as connection:
+                results = await connection.fetch(
+                    """SELECT * FROM submission
+                    WHERE guild_id=$1 AND author_id=$2
+                    ORDER BY author_id
+                    """,
+                    interaction.guild_id,
+                    interaction.user.id
+                )
             no_submission_message = "You haven't submitted anything yet."
             show_all = False
             user = interaction.user
 
         elif member is not None or member != interaction.user:
-            post = {"guild_id": interaction.guild.id, "author_id": member.id}
+            async with self.db.pool.acquire() as connection:
+                results = await connection.fetch(
+                    """SELECT * FROM submission
+                    WHERE guild_id=$1 AND author_id=$2
+                    ORDER BY author_id
+                    """,
+                    interaction.guild_id,
+                    member.id
+                )
             no_submission_message = f"**{member}** hasn't submitted anything yet."
             show_all = False
             user = member
 
-        documents = await self.db.find(post)
-        documents.sort(key=lambda x: x["author_id"])
-
-        if not documents:
+        if not results:
             raise errors.NoSubmissionError(no_submission_message)
 
         embed = utils.embed.create_embed_with_author(
@@ -241,7 +295,7 @@ class Submission(commands.Cog):
         )
         await interaction.response.send_message(embed=embed)
 
-        embeds = await utils.submission.create_submissions_embed(interaction, documents, user, show_all)
+        embeds = await utils.submission.create_submissions_embed(interaction, results, user, show_all)
         paginator = EmbedPaginator(interaction, embeds)
         
         embed = paginator.index_page
@@ -267,7 +321,14 @@ class Submission(commands.Cog):
         can_manage_guild = interaction.user.guild_permissions.manage_guild
 
         if clear_all:
-            post = {"guild_id": interaction.guild.id}
+            async with self.db.pool.acquire() as connection:
+                results = await connection.fetch(
+                    """SELECT * FROM submission
+                    WHERE guild_id=$1
+                    ORDER BY author_id
+                    """,
+                    interaction.guild_id
+                )
             no_submission_message = "Hmm, it seems like nobody has submitted anything yet."
             success_message = "All submissions have been deleted."
             confirm_message = "This will delete everyone's submissions. Are you sure you wanna proceed?"
@@ -276,13 +337,29 @@ class Submission(commands.Cog):
                 raise errors.MissingPermission("Manage Server")
 
         elif member is None or member == interaction.user:
-            post = {"guild_id": interaction.guild.id, "author_id": interaction.user.id}
+            async with self.db.pool.acquire() as connection:
+                results = await connection.fetch(
+                    """SELECT * FROM submission
+                    WHERE guild_id=$1 AND author_id=$2
+                    ORDER BY author_id
+                    """,
+                    interaction.guild_id,
+                    interaction.user.id
+                )
             no_submission_message = "You haven't submitted anything yet."
             success_message = "Deleted all of your submissions."
             confirm_message = "This will delete all of your submissions. Are you sure you wanna proceed?"
 
         elif member is not None or member != interaction.user:
-            post = {"guild_id": interaction.guild.id, "author_id": member.id}
+            async with self.db.pool.acquire() as connection:
+                results = await connection.fetch(
+                    """SELECT * FROM submission
+                    WHERE guild_id=$1 AND author_id=$2
+                    ORDER BY author_id
+                    """,
+                    interaction.guild_id,
+                    member.id
+                )
             no_submission_message = f"**{member}** hasn't submitted anything yet."
             success_message = f"Deleted all of **{member}**'s submissions."
             confirm_message = f"This will delete all of **{member}**'s submissions. Are you sure you wanna proceed?"
@@ -290,8 +367,7 @@ class Submission(commands.Cog):
             if not can_manage_guild:
                 raise errors.MissingPermission("Manage Server")
 
-        documents = await self.db.find(post)
-        if not documents:
+        if not results:
             raise errors.NoSubmissionError(no_submission_message)
 
         view = Confirm(interaction.user)
@@ -308,8 +384,8 @@ class Submission(commands.Cog):
             db=self.db,
             interaction=interaction,
             view=view,
-            post=post,
-            documents=documents,
+            query="DELETE FROM submission",
+            results=results,
             success_message=success_message,
             delete_many=True
         )
@@ -348,5 +424,4 @@ class Submission(commands.Cog):
 
 
 async def setup(bot: "OddBot") -> None:
-    db = Database(bot.config, "fanweek", "submissions")
-    await bot.add_cog(Submission(bot, db))
+    await bot.add_cog(Submission(bot))

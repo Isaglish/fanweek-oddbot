@@ -49,7 +49,7 @@ class ReportUserModal(discord.ui.Modal):
 
         await interaction.response.send_message("Thank you for reporting! We will come back to you after reviewing the report.", ephemeral=True)
 
-        report_channel = await self.guild.fetch_channel(self.channel_id)
+        report_channel = self.guild.get_channel(self.channel_id)
 
         assert isinstance(report_channel, discord.TextChannel)
 

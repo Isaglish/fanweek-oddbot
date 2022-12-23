@@ -34,6 +34,7 @@ from discord import app_commands
 from cogs.utils import Context
 from cogs.utils.modals import ReportUserModal
 from cogs.utils.dropdown import HelpCommandDropdownView
+from cogs.utils.database import Database
 
 
 __all__ = (
@@ -46,7 +47,7 @@ abs_path = Path(__file__).parent.resolve()
 
 class OddBot(commands.Bot):
 
-    def __init__(self, config: dict[str, Any], cmd_prefix: str) -> None:
+    def __init__(self, config: dict[str, Any], cmd_prefix: str, db: Database) -> None:
 
         # bot variables
         self.uptime = discord.utils.utcnow()
@@ -58,6 +59,7 @@ class OddBot(commands.Bot):
         self.log.setLevel(logging.INFO)
 
         self.config = config
+        self.db = db
 
         super().__init__(
             command_prefix=cmd_prefix,
@@ -82,7 +84,7 @@ class OddBot(commands.Bot):
         if member == interaction.user:
             await interaction.response.send_message("Hey! You can't report yourself!", ephemeral=True)
             return None
-        
+
         report_guild = discord.utils.get(self.guilds, id=self.config["report_guild_id"])
         assert report_guild
         await interaction.response.send_modal(ReportUserModal(member, self.config["report_channel_id"], report_guild))
@@ -95,6 +97,7 @@ class OddBot(commands.Bot):
             self.log.info(f"Extension '{cog}' has been loaded.")
 
         await self.load_extension("jishaku")
+        await self.db.create_pool()
 
 
     async def on_connect(self) -> None:

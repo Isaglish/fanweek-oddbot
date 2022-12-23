@@ -1,0 +1,29 @@
+{
+    "discord_api_token": "mytoken",
+    "postgres_url": "postgres_url",
+    "owner_ids": [353774678826811403],
+    "report_channel_id": 1020388867506962542,
+    "report_guild_id": 758487559399145524,
+    "loading_emoji": "<a:animated_gold:758589220960075777>",
+    "open_source_files": [
+        ".gitignore",
+        "bot.py",
+        "launcher.py",
+        "LICENSE",
+        "README.md",
+        "requirements.txt",
+        "cogs/submissions.py",
+        "cogs/errors/__init__.py",
+        "cogs/errors/general.py",
+        "cogs/errors/links.py",
+        "cogs/errors/submission.py",
+        "cogs/utils/__init__.py",
+        "cogs/utils/app_commands.py",
+        "cogs/utils/database.py",
+        "cogs/utils/dropdown.py",
+        "cogs/utils/embed.py",
+        "cogs/utils/modals.py",
+        "submission.py",
+        "cogs/utils/views.py"
+    ]
+}

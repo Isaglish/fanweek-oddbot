@@ -4,3 +4,5 @@ bs4
 motor
 dnspython
 jishaku
+asyncpg
+asyncio

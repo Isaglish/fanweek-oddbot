@@ -9,6 +9,7 @@ from typing import Optional, Any
 
 import discord
 import aiohttp
+import asyncpg
 from bs4 import BeautifulSoup, Tag
 
 from cogs.utils.views import Confirm
@@ -24,8 +25,8 @@ __all__ = (
 )
 
 
-async def get_game_attrs(link: str) -> dict[str, Any]:
-    async with aiohttp.ClientSession() as session, session.get(link) as response:
+async def get_game_attrs(game_url: str) -> dict[str, Any]:
+    async with aiohttp.ClientSession() as session, session.get(game_url) as response:
         r = await response.text()
         doc = BeautifulSoup(r, "html.parser")
 
@@ -65,7 +66,7 @@ async def check_game_existence(identifier: str) -> bool:
 
 async def create_submissions_embed(
     interaction: discord.Interaction,
-    documents: list[dict[str, Any]],
+    results: list[asyncpg.Record],
     member: Optional[discord.Member | discord.User] = None,
     show_all: bool = True
 ) -> list[discord.Embed]:
@@ -76,21 +77,21 @@ async def create_submissions_embed(
     embeds = []
 
     end = 10
-    for start in range(0, len(documents), 10):
-        current_submissions = documents[start:end]
+    for start in range(0, len(results), 10):
+        current_submissions = results[start:end]
         end += 10
         
         items = []
         for item_index, submission in enumerate(current_submissions, start=start+1):
             user = interaction.guild.get_member(submission["author_id"])
-            items.append(f"**{item_index}.** [{submission['title']}]({submission['link']}){f' • {user}' if show_all else ''}")
+            items.append(f"**{item_index}.** [{submission['game_title']}]({submission['game_url']}){f' • {user}' if show_all else ''}")
 
         item = "\n".join(items)
 
         embed = create_embed_with_author(
             color=discord.Color.blue(),
             description=f"**Showing all submissions:**\n\n{item}" if show_all else f"**Showing all of {member}'s submissions:**\n\n{item}",
-            author=f"{interaction.guild} Submissions (Total: {len(documents)})" if show_all else interaction.user,
+            author=f"{interaction.guild} Submissions (Total: {len(results)})" if show_all else interaction.user,
             author_icon_url=interaction.guild.icon.url if show_all else None
         )
         embeds.append(embed)
@@ -103,16 +104,16 @@ async def handle_confirm_view(
     db: Database,
     interaction: discord.Interaction,
     view: Confirm,
-    post: dict[str, Any],
-    documents: dict[str, Any] | list[dict[str, Any]],
+    query: str,
+    results: asyncpg.Record | list[asyncpg.Record],
     success_message: Optional[str] = None,
     delete_many: bool = False
 ) -> None:
 
     confirm_message = f"{config['loading_emoji']} Deleting submission{'s' if delete_many else ''}..."
 
-    if isinstance(documents, dict):
-        success_message = f"The game **{documents['title']}** has been removed from the database."
+    if isinstance(results, asyncpg.Record):
+        success_message = f"The game **{results['game_title']}** has been removed from the database." #type: ignore
 
     await view.wait()
     if view.value is None:
@@ -132,10 +133,13 @@ async def handle_confirm_view(
         await interaction.edit_original_response(embed=embed, view=None)
 
         if not delete_many:
-            await db.delete_one(post)
+            async with db.pool.acquire() as connection:
+                results = await connection.execute(query)
         else:
-            await db.delete_many(post)
-            embed.set_footer(text=f"Deleted a total of {len(documents)} submissions.")
+            async with db.pool.acquire() as connection:
+                results = await connection.execute(query)
+            assert results is None
+            embed.set_footer(text=f"Deleted a total of {results.rowcount} submissions.")
 
         embed.description = success_message
         embed.color = discord.Color.green()

@@ -41,8 +41,8 @@ Parameters inside `[default: value]` are optional.
 
 | Command                                               | Description                                | Permissions                                                                    |
 | ----------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------ |
-| **`/submissions submit <link> [member: None] `**      | Saves your submission into the database.   | accessing **`[member: None]`** requires `Manage Server`                        |
-| **`/submissions unsubmit <link>`**                    | Removes your submission from the database. | un-submitting another member's submission requires `Manage Server`             |
+| **`/submissions submit <game_url> [member: None] `**      | Saves your submission into the database.   | accessing **`[member: None]`** requires `Manage Server`                        |
+| **`/submissions unsubmit <game_url>`**                    | Removes your submission from the database. | un-submitting another member's submission requires `Manage Server`             |
 | **`/submissions show [member: None] [all: False] `**  | Shows all of your submissions.             | `None`                                                                         |
 | **`/submissions clear [member: None] [all: False] `** | Clears all of your submissions.            | accessing **`[member: None]`** and **`[all: False]`** requires `Manage Server` |
 
@@ -69,4 +69,3 @@ If you find any bugs, issues, or unexpected behavior while using the bot, you sh
 ## Links
 - **License:** [MIT](https://github.com/Isaglish/fanweek-oddbot/blob/main/LICENSE)
 - **Repository:** [GitHub](https://github.com/Isaglish/fanweek-oddbot)
-- **Trello (Keep Track of The Project):** [Trello](https://trello.com/b/rRpugSu1/fanweek-oddbot)

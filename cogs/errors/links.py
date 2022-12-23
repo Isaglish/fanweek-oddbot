@@ -11,20 +11,20 @@ from cogs.errors import MessageError
 
 
 __all__ = (
-    "UnrecognizedLinkError",
-    "InvalidLinkError"
+    "UnrecognizedURLError",
+    "InvalidURLError"
 )
 
 
-class UnrecognizedLinkError(MessageError):
+class UnrecognizedURLError(MessageError):
     """An exception raised when the provided url is not recognized as Fancade."""
     
     def __init__(self, message: Optional[str] = None) -> None:
-        super().__init__(message or "Unrecognized link provided.")
+        super().__init__(message or "Unrecognized URL provided.")
 
 
-class InvalidLinkError(MessageError):
-    """An exception raised when the provided url is not a valid Fancade link."""
+class InvalidURLError(MessageError):
+    """An exception raised when the provided url is not a valid Fancade URL."""
 
     def __init__(self, message: Optional[str] = None) -> None:
-        super().__init__(message or "Invalid link provided.")
+        super().__init__(message or "Invalid URL provided.")

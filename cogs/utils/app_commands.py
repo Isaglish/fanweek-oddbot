@@ -9,10 +9,10 @@ import discord
 from discord import app_commands
 
 from cogs.errors import (
-    UnrecognizedLinkError,
+    UnrecognizedURLError,
     MissingPermission,
     SubmissionAlreadyExists,
-    InvalidLinkError,
+    InvalidURLError,
     VoidGameError,
     SubmissionNotInDatabase,
     NoSubmissionError
@@ -35,9 +35,9 @@ class Group(app_commands.Group):
         
         if isinstance(
             error,
-            UnrecognizedLinkError | 
+            UnrecognizedURLError | 
             SubmissionAlreadyExists |
-            InvalidLinkError |
+            InvalidURLError |
             VoidGameError |
             SubmissionNotInDatabase |
             NoSubmissionError
