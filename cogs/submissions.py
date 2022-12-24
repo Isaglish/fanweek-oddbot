@@ -28,7 +28,6 @@ class Submission(commands.Cog):
     def __init__(self, bot: "OddBot") -> None:
         self.bot = bot
         self.log = bot.log
-        self.db = self.bot.db
         self.open_source_files = bot.config["open_source_files"]
 
 
@@ -67,7 +66,7 @@ class Submission(commands.Cog):
             raise errors.UnrecognizedURLError("I don't recognize that URL.")
 
 
-        async with self.db.pool.acquire() as connection:
+        async with self.bot.pool.acquire() as connection:
             result = await connection.fetchrow(
                 """
                 SELECT author_id, game_title FROM submission
@@ -101,7 +100,7 @@ class Submission(commands.Cog):
             raise errors.VoidGameError("Hmm.. It seems like that game doesn't exist.")
 
         if member is None or member == interaction.user:
-            async with self.db.pool.acquire() as connection:
+            async with self.bot.pool.acquire() as connection:
                 await connection.execute(
                     "INSERT INTO submission (author_id, guild_id, game_title, game_url) VALUES ($1, $2, $3, $4)",
                     interaction.user.id,
@@ -115,7 +114,7 @@ class Submission(commands.Cog):
 
         else:
             assert member.avatar
-            async with self.db.pool.acquire() as connection:
+            async with self.bot.pool.acquire() as connection:
                 await connection.execute(
                     "INSERT INTO submission (author_id, guild_id, game_title, game_url) VALUES ($1, $2, $3, $4)",
                     member.id,
@@ -140,10 +139,10 @@ class Submission(commands.Cog):
         if not game_url.startswith("https://play.fancade.com/"):
             raise errors.UnrecognizedURLError("I don't recognize that URL.")
 
-        async with self.db.pool.acquire() as connection:
+        async with self.bot.pool.acquire() as connection:
             result = await connection.fetchrow(
                 """
-                SELECT author_id, game_title FROM submission
+                SELECT author_id, game_title, game_url FROM submission
                 WHERE guild_id=$1 AND game_url=$2
                 """,
                 interaction.guild_id,
@@ -179,10 +178,10 @@ class Submission(commands.Cog):
 
         await utils.submission.handle_confirm_view(
             config=self.bot.config,
-            db=self.db,
+            bot=self.bot,
             interaction=interaction,
             view=view,
-            query="DELETE FROM submission",
+            exec_args=("DELETE FROM submission WHERE game_url=$1", result["game_url"]),
             results=result
         )
 
@@ -197,11 +196,11 @@ class Submission(commands.Cog):
         assert interaction.guild
 
         if interaction.user.guild_permissions.manage_guild:
-            async with self.db.pool.acquire() as connection:
+            async with self.bot.pool.acquire() as connection:
                 results = await connection.fetch(
                     """
                     SELECT * FROM submission
-                    WHERE game_title=$1 AND guild_id=$2
+                    WHERE game_title ~* $1 AND guild_id=$2
                     ORDER BY author_id
                     """,
                     current,
@@ -214,7 +213,7 @@ class Submission(commands.Cog):
                 ) for result in results
             ]
         else:
-            async with self.db.pool.acquire() as connection:
+            async with self.bot.pool.acquire() as connection:
                 results = await connection.fetch(
                     """
                     SELECT * FROM submission
@@ -246,7 +245,7 @@ class Submission(commands.Cog):
         assert interaction.guild
 
         if show_all:
-            async with self.db.pool.acquire() as connection:
+            async with self.bot.pool.acquire() as connection:
                 results = await connection.fetch(
                     """SELECT * FROM submission
                     WHERE guild_id=$1
@@ -258,7 +257,7 @@ class Submission(commands.Cog):
             user = None
 
         elif member is None or member == interaction.user:
-            async with self.db.pool.acquire() as connection:
+            async with self.bot.pool.acquire() as connection:
                 results = await connection.fetch(
                     """SELECT * FROM submission
                     WHERE guild_id=$1 AND author_id=$2
@@ -272,7 +271,7 @@ class Submission(commands.Cog):
             user = interaction.user
 
         elif member is not None or member != interaction.user:
-            async with self.db.pool.acquire() as connection:
+            async with self.bot.pool.acquire() as connection:
                 results = await connection.fetch(
                     """SELECT * FROM submission
                     WHERE guild_id=$1 AND author_id=$2
@@ -321,7 +320,7 @@ class Submission(commands.Cog):
         can_manage_guild = interaction.user.guild_permissions.manage_guild
 
         if clear_all:
-            async with self.db.pool.acquire() as connection:
+            async with self.bot.pool.acquire() as connection:
                 results = await connection.fetch(
                     """SELECT * FROM submission
                     WHERE guild_id=$1
@@ -332,12 +331,13 @@ class Submission(commands.Cog):
             no_submission_message = "Hmm, it seems like nobody has submitted anything yet."
             success_message = "All submissions have been deleted."
             confirm_message = "This will delete everyone's submissions. Are you sure you wanna proceed?"
+            exec_args = ("DELETE FROM submission WHERE guild_id=$1", interaction.guild_id)
 
             if not can_manage_guild:
                 raise errors.MissingPermission("Manage Server")
 
         elif member is None or member == interaction.user:
-            async with self.db.pool.acquire() as connection:
+            async with self.bot.pool.acquire() as connection:
                 results = await connection.fetch(
                     """SELECT * FROM submission
                     WHERE guild_id=$1 AND author_id=$2
@@ -349,9 +349,10 @@ class Submission(commands.Cog):
             no_submission_message = "You haven't submitted anything yet."
             success_message = "Deleted all of your submissions."
             confirm_message = "This will delete all of your submissions. Are you sure you wanna proceed?"
+            exec_args = ("DELETE FROM submission WHERE guild_id=$1 AND author_id=$2", interaction.guild_id, interaction.user.id)
 
         elif member is not None or member != interaction.user:
-            async with self.db.pool.acquire() as connection:
+            async with self.bot.pool.acquire() as connection:
                 results = await connection.fetch(
                     """SELECT * FROM submission
                     WHERE guild_id=$1 AND author_id=$2
@@ -363,6 +364,7 @@ class Submission(commands.Cog):
             no_submission_message = f"**{member}** hasn't submitted anything yet."
             success_message = f"Deleted all of **{member}**'s submissions."
             confirm_message = f"This will delete all of **{member}**'s submissions. Are you sure you wanna proceed?"
+            exec_args = ("DELETE FROM submission WHERE guild_id=$1 AND author_id=$2", interaction.guild_id, member.id)
 
             if not can_manage_guild:
                 raise errors.MissingPermission("Manage Server")
@@ -381,10 +383,10 @@ class Submission(commands.Cog):
 
         await utils.submission.handle_confirm_view(
             config=self.bot.config,
-            db=self.db,
+            bot=self.bot,
             interaction=interaction,
             view=view,
-            query="DELETE FROM submission",
+            exec_args=exec_args,
             results=results,
             success_message=success_message,
             delete_many=True

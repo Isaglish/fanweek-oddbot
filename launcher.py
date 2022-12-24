@@ -2,7 +2,6 @@ import json
 from typing import Any
 
 from bot import OddBot
-from cogs.utils.database import Database
 
 
 def load_config() -> dict[str, Any]:
@@ -13,11 +12,9 @@ def load_config() -> dict[str, Any]:
 
 
 def main() -> None:
-    db = Database(load_config())
     bot = OddBot(
         config=load_config(),
-        cmd_prefix="ob.",
-        db=db
+        cmd_prefix="ob."
     )
     bot.run(bot.config["discord_api_token"])
 

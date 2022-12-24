@@ -28,13 +28,13 @@ from pathlib import Path
 from typing import Literal, Optional
 
 import discord
+import asyncpg
 from discord.ext import commands
 from discord import app_commands
 
 from cogs.utils import Context
 from cogs.utils.modals import ReportUserModal
 from cogs.utils.dropdown import HelpCommandDropdownView
-from cogs.utils.database import Database
 
 
 __all__ = (
@@ -47,7 +47,7 @@ abs_path = Path(__file__).parent.resolve()
 
 class OddBot(commands.Bot):
 
-    def __init__(self, config: dict[str, Any], cmd_prefix: str, db: Database) -> None:
+    def __init__(self, config: dict[str, Any], cmd_prefix: str) -> None:
 
         # bot variables
         self.uptime = discord.utils.utcnow()
@@ -59,7 +59,6 @@ class OddBot(commands.Bot):
         self.log.setLevel(logging.INFO)
 
         self.config = config
-        self.db = db
 
         super().__init__(
             command_prefix=cmd_prefix,
@@ -97,7 +96,7 @@ class OddBot(commands.Bot):
             self.log.info(f"Extension '{cog}' has been loaded.")
 
         await self.load_extension("jishaku")
-        await self.db.create_pool()
+        await self.create_pool()
 
 
     async def on_connect(self) -> None:
@@ -114,6 +113,22 @@ class OddBot(commands.Bot):
 
     async def on_disconnect(self) -> None:
         self.log.critical("Bot has disconnected!")
+
+
+    async def create_pool(self) -> None:
+        pool = await asyncpg.create_pool(dsn=self.config["postgres_url"])
+        assert pool
+        async with pool.acquire() as connection:
+            query = """CREATE TABLE IF NOT EXISTS submission (
+                id SERIAL PRIMARY KEY,
+                author_id BIGINT,
+                guild_id BIGINT,
+                game_title TEXT,
+                game_url TEXT
+            )"""
+            await connection.execute(query)
+
+        self.pool = pool
         
 
 # ungrouped commands
@@ -125,19 +140,19 @@ async def sync(ctx: Context, option: Optional[Literal["~", "*", "^"]] = None) ->
     assert ctx.guild
 
     if option == "~":
-        synced = await ctx.bot.tree.sync(guild=ctx.guild)
+        synced = await ctx.bot.tree.sync(guild=ctx.guild)  # sync to guild
 
     elif option == "*":
-        ctx.bot.tree.copy_global_to(guild=ctx.guild)
+        ctx.bot.tree.copy_global_to(guild=ctx.guild)  # copy from global commands and sync to guild
         synced = await ctx.bot.tree.sync(guild=ctx.guild)
 
     elif option == "^":
-        ctx.bot.tree.clear_commands(guild=ctx.guild)
+        ctx.bot.tree.clear_commands(guild=ctx.guild)  # clear tree then sync
         await ctx.bot.tree.sync(guild=ctx.guild)
         synced = []
 
     else:
-        synced = await ctx.bot.tree.sync()
+        synced = await ctx.bot.tree.sync()  # sync globally
 
     await ctx.send(f"Synced {len(synced)} commands {'globally' if option is None else 'to the current guild'}.")
 
