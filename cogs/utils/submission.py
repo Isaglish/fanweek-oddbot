@@ -5,7 +5,7 @@ Utility functions for submissions.py
 :license: MIT, see LICENSE for more details.
 """
 
-from typing import Optional, Any
+from typing import Optional, Any, TYPE_CHECKING
 
 import discord
 import aiohttp
@@ -13,8 +13,10 @@ import asyncpg
 from bs4 import BeautifulSoup, Tag
 
 from cogs.utils.views import Confirm
-from cogs.utils.database import Database
 from cogs.utils.embed import create_embed_with_author
+
+if TYPE_CHECKING:
+    from ...bot import OddBot
 
 
 __all__ = (
@@ -101,10 +103,10 @@ async def create_submissions_embed(
 
 async def handle_confirm_view(
     config: dict[str, Any],
-    db: Database,
+    bot: "OddBot",
     interaction: discord.Interaction,
     view: Confirm,
-    query: str,
+    exec_args: tuple[Any, ...],
     results: asyncpg.Record | list[asyncpg.Record],
     success_message: Optional[str] = None,
     delete_many: bool = False
@@ -113,7 +115,7 @@ async def handle_confirm_view(
     confirm_message = f"{config['loading_emoji']} Deleting submission{'s' if delete_many else ''}..."
 
     if isinstance(results, asyncpg.Record):
-        success_message = f"The game **{results['game_title']}** has been removed from the database." #type: ignore
+        success_message = f"The game **{results['game_title']}** has been removed from the database."
 
     await view.wait()
     if view.value is None:
@@ -132,14 +134,15 @@ async def handle_confirm_view(
         )
         await interaction.edit_original_response(embed=embed, view=None)
 
+        query, *args = exec_args
+
         if not delete_many:
-            async with db.pool.acquire() as connection:
-                results = await connection.execute(query)
+            async with bot.pool.acquire() as connection:
+                await connection.execute(query, *args)
         else:
-            async with db.pool.acquire() as connection:
-                results = await connection.execute(query)
-            assert results is None
-            embed.set_footer(text=f"Deleted a total of {results.rowcount} submissions.")
+            async with bot.pool.acquire() as connection:
+                await connection.execute(query, *args)
+            embed.set_footer(text=f"Deleted a total of {len(results)} submissions.")
 
         embed.description = success_message
         embed.color = discord.Color.green()
