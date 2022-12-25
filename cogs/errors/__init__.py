@@ -6,5 +6,5 @@ Custom Exceptions.
 """
 
 from .general import *
-from .links import *
+from .url import *
 from .submission import *

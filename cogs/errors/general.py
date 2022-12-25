@@ -11,13 +11,13 @@ from discord import app_commands
 
 
 __all__ = (
-    "MessageError",
+    "CustomMessageError",
     "MissingPermission",
     "FileForbiddenAccess"
 )
 
 
-class MessageError(app_commands.AppCommandError):
+class CustomMessageError(app_commands.AppCommandError):
     """Base class for custom errors that have the message attribute."""
 
     def __init__(self, message: Optional[str] = None) -> None:
@@ -25,7 +25,7 @@ class MessageError(app_commands.AppCommandError):
         super().__init__(self.message)
 
 
-class FileForbiddenAccess(MessageError):
+class FileForbiddenAccess(CustomMessageError):
     """An exception raised when you don't have access to the file."""
 
     def __init__(self, message: Optional[str] = None) -> None:

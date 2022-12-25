@@ -63,8 +63,7 @@ class Submission(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
         if not game_url.startswith("https://play.fancade.com/"):
-            raise errors.UnrecognizedURLError("I don't recognize that URL.")
-
+            raise errors.UnrecognizedUrlError("I don't recognize that URL.")
 
         async with self.bot.pool.acquire() as connection:
             result = await connection.fetchrow(
@@ -87,17 +86,17 @@ class Submission(commands.Cog):
                 f"The game **{result['game_title']}** has already been submitted by **{author}**."
             )
 
-        game_identifier = game_url[25:]
-        if len(game_identifier) != 16:
-            raise errors.InvalidURLError("That is an invalid URL.")
+        game_id = game_url[25:]
+        if len(game_id) != 16:
+            raise errors.InvalidUrlError("That is an invalid URL.")
 
-        game_exists = await utils.submission.check_game_existence(game_identifier)
+        game_exists = await utils.submission.game_exists_check(game_id)
         if game_exists and game_attrs["title"] == "Fancade":  # has an image but no title
             identifier = "".join(random.choices(string.ascii_letters, k=6))
             game_attrs["title"] = f"?ULG_{identifier}?"
 
         elif not game_exists and game_attrs["title"] == "Fancade":  # has no image and no title
-            raise errors.VoidGameError("Hmm.. It seems like that game doesn't exist.")
+            raise errors.GameNotFoundError("Hmm.. It seems like that game doesn't exist.")
 
         if member is None or member == interaction.user:
             async with self.bot.pool.acquire() as connection:
@@ -137,7 +136,7 @@ class Submission(commands.Cog):
         assert interaction.guild
 
         if not game_url.startswith("https://play.fancade.com/"):
-            raise errors.UnrecognizedURLError("I don't recognize that URL.")
+            raise errors.UnrecognizedUrlError("I don't recognize that URL.")
 
         async with self.bot.pool.acquire() as connection:
             result = await connection.fetchrow(
@@ -217,7 +216,7 @@ class Submission(commands.Cog):
                 results = await connection.fetch(
                     """
                     SELECT * FROM submission
-                    WHERE game_title=$1 AND guild_id=$2 AND author_id=$3
+                    WHERE game_title ~* $1 AND guild_id=$2 AND author_id=$3
                     ORDER BY author_id
                     """,
                     current,

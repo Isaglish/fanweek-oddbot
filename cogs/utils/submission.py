@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 __all__ = (
     "get_game_attrs",
-    "check_game_existence",
+    "game_exists_check",
     "create_submissions_embed",
     "handle_confirm_view"
 )
@@ -49,8 +49,8 @@ async def get_game_attrs(game_url: str) -> dict[str, Any]:
     return {"title": title, "image_url": image_url, "description": description, "author": author}
 
 
-async def check_game_existence(identifier: str) -> bool:
-    async with aiohttp.ClientSession() as session, session.get(f"https://www.fancade.com/images/{identifier}.jpg") as response:
+async def game_exists_check(game_id: str) -> bool:
+    async with aiohttp.ClientSession() as session, session.get(f"https://www.fancade.com/images/{game_id}.jpg") as response:
         try:
             r = await response.text()
             doc = BeautifulSoup(r, "html.parser")

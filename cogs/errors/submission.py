@@ -7,38 +7,38 @@ Submission Custom Exceptions.
 
 from typing import Optional
 
-from cogs.errors import MessageError
+from cogs.errors import CustomMessageError
 
 __all__ = (
     "SubmissionAlreadyExists",
     "SubmissionNotInDatabase",
     "NoSubmissionError",
-    "VoidGameError"
+    "GameNotFoundError"
 )
 
 
-class SubmissionAlreadyExists(MessageError):
+class SubmissionAlreadyExists(CustomMessageError):
     """An exception raised when the submission already exists."""
 
     def __init__(self, message: Optional[str] = None) -> None:
         super().__init__(message or "Submission already exists.")
 
 
-class SubmissionNotInDatabase(MessageError):
+class SubmissionNotInDatabase(CustomMessageError):
     """An exception raised when the submission is not in the database."""
 
     def __init__(self, message: Optional[str] = None) -> None:
         super().__init__(message or "Submission not in database.")
 
 
-class NoSubmissionError(MessageError):
+class NoSubmissionError(CustomMessageError):
     """An exception raised when there is no submission."""
 
     def __init__(self, message: Optional[str] = None) -> None:
         super().__init__(message or "No Submission.")
 
 
-class VoidGameError(MessageError):
+class GameNotFoundError(CustomMessageError):
     """An exception raised when the game doesn't exist."""
 
     def __init__(self, message: Optional[str] = None) -> None:
