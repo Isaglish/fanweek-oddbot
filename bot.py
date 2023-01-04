@@ -34,15 +34,11 @@ from discord import app_commands
 
 from cogs.utils import Context
 from cogs.utils.modals import ReportUserModal
-from cogs.utils.dropdown import HelpCommandDropdownView
 
 
 __all__ = (
     "OddBot",
 )
-
-
-abs_path = Path(__file__).parent.resolve()
 
 
 class OddBot(commands.Bot):
@@ -74,7 +70,6 @@ class OddBot(commands.Bot):
             callback=self.report_user
         )
         self.tree.add_command(self.report_user_ctx_menu)
-        self.tree.add_command(help_command)
         self.add_command(sync)
 
 
@@ -155,26 +150,3 @@ async def sync(ctx: Context, option: Optional[Literal["~", "*", "^"]] = None) ->
         synced = await ctx.bot.tree.sync()  # sync globally
 
     await ctx.send(f"Synced {len(synced)} commands {'globally' if option is None else 'to the current guild'}.")
-
-
-@app_commands.command(name="help", description="A help command that shows all available features.")
-async def help_command(interaction: discord.Interaction):
-
-    description = f"""
-    Hello there! Welcome to the help page.
-
-    Use the dropdown menu below to select a category.
-
-    **Who are you?**
-    I'm a bot made by Isaglish#8034. I was created on
-    <t:1614414925:F>.
-    I was made specifically for Fanweek and for keeping track of your submissions.
-    You could get more information by using the dropdown below.
-
-    I am also open-source so come check out my code on [GitHub](https://github.com/Isaglish/fanweek-oddbot)!
-    """
-    embed = discord.Embed(color=discord.Color.blue(), description=description)
-    embed.set_author(name="Bot Help Page.")
-
-    view = HelpCommandDropdownView(interaction.user)
-    await interaction.response.send_message(embed=embed, view=view)
