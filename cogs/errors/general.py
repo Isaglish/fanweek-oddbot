@@ -38,5 +38,3 @@ class MissingPermission(app_commands.AppCommandError):
     def __init__(self, missing_permission: str) -> None:
         self.missing_permission = missing_permission
         super().__init__(f"Member missing {missing_permission} permission.")
-
-

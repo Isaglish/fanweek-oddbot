@@ -28,3 +28,4 @@ class InvalidUrlError(CustomMessageError):
 
     def __init__(self, message: Optional[str] = None) -> None:
         super().__init__(message or "Invalid URL provided.")
+        
