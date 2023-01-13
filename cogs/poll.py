@@ -33,10 +33,10 @@ async def check_poll(bot: "OddBot", _message_id: Optional[int] = None) -> None:
             )
         else:
             end_early = False
-            now_unix_timestamp = discord.utils.utcnow().timestamp()
+            now = discord.utils.utcnow()
             result = await connection.fetchrow(
                 "SELECT message_id, channel_id FROM poll WHERE deadline < $1;",
-                now_unix_timestamp
+                now.timestamp()
             )
 
         if result is None:  # no poll
@@ -257,7 +257,6 @@ class Poll(commands.Cog):
             return None
 
         deadline = discord.utils.utcnow() + deadline
-        deadline_unix_timestamp = deadline.timestamp()
 
         opts = {}
         for i, option in enumerate(options):
@@ -287,7 +286,7 @@ class Poll(commands.Cog):
                 """,
                 message.id,
                 channel.id,
-                deadline_unix_timestamp
+                deadline.timestamp()
             )
 
             await connection.executemany(
