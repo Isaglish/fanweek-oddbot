@@ -6,12 +6,12 @@ Custom datetime functions.
 """
 
 import datetime
-import time
 import re
 
 
-def unix_timestamp(datetime: datetime.datetime) -> int:
-    return int(time.mktime(datetime.timetuple()))
+__all__ = (
+    "str_to_timedelta",
+)
 
 
 def str_to_timedelta(string: str) -> datetime.timedelta | None:

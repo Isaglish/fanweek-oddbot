@@ -26,6 +26,29 @@ if TYPE_CHECKING:
     from bot import OddBot
 
 
+OPEN_SOURCE_FILES = [
+    ".gitignore",
+    "bot.py",
+    "launcher.py",
+    "LICENSE",
+    "README.md",
+    "requirements.txt",
+    "cogs/submissions.py",
+    "cogs/errors/__init__.py",
+    "cogs/errors/general.py",
+    "cogs/errors/links.py",
+    "cogs/errors/submission.py",
+    "cogs/utils/__init__.py",
+    "cogs/utils/app_commands.py",
+    "cogs/utils/database.py",
+    "cogs/utils/dropdown.py",
+    "cogs/utils/embed.py",
+    "cogs/utils/modals.py",
+    "submission.py",
+    "cogs/utils/views.py"
+]
+
+
 async def handle_confirm_view(
     config: dict[str, Any],
     bot: "OddBot",
@@ -158,12 +181,11 @@ async def get_game_attrs(game_url: str) -> dict[str, Any]:
 
 class Submission(commands.Cog):
 
-    __slots__ = "bot", "log", "open_source_files"
+    __slots__ = "bot", "log"
 
     def __init__(self, bot: "OddBot") -> None:
         self.bot = bot
         self.log = bot.log
-        self.open_source_files = bot.config["open_source_files"]
 
     # groups
     submissions_group = Group(name="submissions", description="Commands related to submissions.")
@@ -522,7 +544,7 @@ class Submission(commands.Cog):
     @app_commands.command(name="get-source", description="Gets the source of the file and sends it to you.")
     @app_commands.describe(file_name="The name of the file you want to get the source of.")
     async def get_source(self, interaction: discord.Interaction, file_name: str) -> None:
-        if file_name not in self.open_source_files:
+        if file_name not in OPEN_SOURCE_FILES:
             raise errors.FileForbiddenAccess("Sorry, but you either can't access that file or it doesn't exist.")
 
         with open(file_name, "r") as f:
@@ -534,7 +556,7 @@ class Submission(commands.Cog):
     @get_source.autocomplete("file_name")
     async def get_source_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
         return [
-            app_commands.Choice(name=source_name, value=source_name) for source_name in self.open_source_files
+            app_commands.Choice(name=source_name, value=source_name) for source_name in OPEN_SOURCE_FILES
         ]
 
     @get_source.error

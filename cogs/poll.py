@@ -14,7 +14,7 @@ from discord.ext import commands, tasks
 
 from cogs.utils.embed import send_error_embed
 from cogs.utils.app_commands import Group
-from cogs.utils.time import str_to_timedelta, unix_timestamp
+from cogs.utils.time import str_to_timedelta
 
 if TYPE_CHECKING:
     from bot import OddBot
@@ -33,7 +33,7 @@ async def check_poll(bot: "OddBot", _message_id: Optional[int] = None) -> None:
             )
         else:
             end_early = False
-            now_unix_timestamp = unix_timestamp(discord.utils.utcnow())
+            now_unix_timestamp = discord.utils.utcnow().timestamp()
             result = await connection.fetchrow(
                 "SELECT message_id, channel_id FROM poll WHERE deadline < $1;",
                 now_unix_timestamp
@@ -182,7 +182,6 @@ class PollView(discord.ui.View):
         if interaction.user.guild_permissions.manage_guild:
             await check_poll(self.bot, interaction.message.id)
             await interaction.response.send_message("You force ended the poll.", ephemeral=True)
-            self.clear_items()
             return None
 
         await interaction.response.send_message("You don't have the permission to do that.", ephemeral=True)
@@ -258,7 +257,7 @@ class Poll(commands.Cog):
             return None
 
         deadline = discord.utils.utcnow() + deadline
-        deadline_unix_timestamp = unix_timestamp(deadline)
+        deadline_unix_timestamp = deadline.timestamp()
 
         opts = {}
         for i, option in enumerate(options):

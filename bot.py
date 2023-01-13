@@ -41,6 +41,10 @@ __all__ = (
     "OddBot",
 )
 
+REPORT_CHANNEL_ID = 1020388867506962542
+REPORT_GUILD_ID = 758487559399145524
+OWNER_IDS = [353774678826811403]
+
 
 class ReportUserModal(discord.ui.Modal):
 
@@ -102,7 +106,7 @@ class OddBot(commands.Bot):
 
         super().__init__(
             command_prefix=cmd_prefix,
-            owner_ids=self.config["owner_ids"],
+            owner_ids=OWNER_IDS,
             activity=discord.Activity(type=discord.ActivityType.playing, name="/help"),
             intents=discord.Intents.all(),
             help_command=None
@@ -122,9 +126,9 @@ class OddBot(commands.Bot):
             await interaction.response.send_message("Hey! You can't report yourself!", ephemeral=True)
             return None
 
-        report_guild = discord.utils.get(self.guilds, id=self.config["report_guild_id"])
+        report_guild = discord.utils.get(self.guilds, id=REPORT_GUILD_ID)
         assert report_guild
-        await interaction.response.send_modal(ReportUserModal(member, self.config["report_channel_id"], report_guild))
+        await interaction.response.send_modal(ReportUserModal(member, REPORT_CHANNEL_ID, report_guild))
 
     # built-in events and methods
     async def setup_hook(self) -> None:
