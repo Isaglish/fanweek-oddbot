@@ -55,7 +55,7 @@ async def check_poll(bot: "OddBot", _message_id: Optional[int] = None) -> None:
             assert isinstance(channel, discord.TextChannel)
             message = await channel.fetch_message(message_id)
         except discord.NotFound:
-            await connection.execute("DELETE FROM poll WHERE message_id = $1", message_id)
+            await connection.execute("DELETE FROM poll WHERE message_id = $1;", message_id)
             return None
 
         option = await connection.fetchrow(
@@ -87,10 +87,14 @@ async def check_poll(bot: "OddBot", _message_id: Optional[int] = None) -> None:
         if not option:  # no votes
             option = await connection.fetchrow(
                 """
-                SELECT option_emoji, option_text FROM poll_options 
+                SELECT option_emoji, option_text FROM poll_options
+                JOIN poll ON poll.id = poll_options.poll_id
+                WHERE poll_options.poll_id = poll.id AND
+                    poll.message_id = $1
                 ORDER BY RANDOM()
                 LIMIT 1;
-                """
+                """,
+                message_id
             )
             assert option
             field_value = f"{option['option_emoji']}**{option['option_text']}** has been chosen randomly since nobody voted on this poll."
@@ -258,12 +262,10 @@ class Poll(commands.Cog):
 
         deadline = discord.utils.utcnow() + deadline
 
-        opts = {}
-        for i, option in enumerate(options):
-            opts[self.emojis[i]] = option
+        options_dict = {self.emojis[i]: option for i, option in enumerate(options)}
 
         description = f"Poll deadline: {discord.utils.format_dt(deadline, style='F')}\n\n"
-        for emoji, option in opts.items():
+        for emoji, option in options_dict.items():
             description += f"{emoji} **{option}**\n"
 
         embed = discord.Embed(
@@ -271,12 +273,13 @@ class Poll(commands.Cog):
             description=description,
             title="Choose the theme for next week."
         )
+
         assert interaction.guild
         assert interaction.guild.icon
-        embed.set_author(name=interaction.guild, icon_url=interaction.guild.icon.url)
-        embed.set_footer(text=f"Poll created by {interaction.user}")
 
-        message = await channel.send(embed=embed, view=PollView(self.bot, opts))
+        embed.set_author(name=interaction.guild, icon_url=interaction.guild.icon.url)
+        message = await channel.send(embed=embed, view=PollView(self.bot, options_dict))
+        embed.set_footer(text=f"Poll created by {interaction.user} • Poll ID: {message.id}")
 
         async with self.bot.pool.acquire() as connection:
             poll_id = await connection.fetchval(
@@ -291,7 +294,7 @@ class Poll(commands.Cog):
 
             await connection.executemany(
                 "INSERT INTO poll_options (poll_id, option_emoji, option_text) VALUES ($1, $2, $3);",
-                [(poll_id, emoji, option) for (emoji, option) in opts.items()]
+                [(poll_id, emoji, option) for (emoji, option) in options_dict.items()]
             )
 
         embed = discord.Embed(
@@ -302,13 +305,27 @@ class Poll(commands.Cog):
 
     @poll_group.command(name="end", description="Force ends an existing poll")
     @app_commands.describe(
-        message_id="The ID of the poll you want to end, or you can just press the end button."
+        poll_id="The ID of the poll you want to end, or you can just press the end button."
     )
-    async def poll_end(self, interaction: discord.Interaction, message_id: str) -> None:
-        async with self.bot.pool.acquire() as connection:
-            result = await connection.fetchrow("SELECT message_id FROM poll WHERE message_id = $1", int(message_id))
+    async def poll_end(self, interaction: discord.Interaction, poll_id: str) -> None:
+        try:
+            message_id = int(poll_id.strip())
+        except ValueError:
+            await interaction.response.send_message(
+                """
+                Please put a valid `poll_id`.
+                You can get this by copying the Poll ID in the poll's footer or
+                you can enable "Advanced" -> "Developer Mode" and copy the message's ID or
+                you can press the `end` button below the poll.
+                """.strip(),
+                ephemeral=True
+            )
+            return None
 
-        await check_poll(self.bot, int(message_id))
+        async with self.bot.pool.acquire() as connection:
+            result = await connection.fetchrow("SELECT message_id FROM poll WHERE message_id = $1;", message_id)
+
+        await check_poll(self.bot, message_id)
         if result is None:
             await interaction.response.send_message("This poll does not exist.", ephemeral=True)
         else:
