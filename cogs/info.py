@@ -122,23 +122,31 @@ class Info(commands.Cog):
         discord_version = discord.__version__
 
         async with self.bot.pool.acquire() as connection:
-            database_version = await connection.fetchrow("SELECT version();")
+            database_version = await connection.fetchval("SELECT version();")
             assert database_version
 
-            database_uptime = await connection.fetchrow(
+            database_uptime = await connection.fetchval(
                 "SELECT extract(epoch FROM now() - pg_postmaster_start_time())::integer AS uptime;"
             )
             assert database_uptime
 
-            database_size = await connection.fetchrow("SELECT pg_size_pretty(pg_database_size(current_database()));")
+            database_size = await connection.fetchval("SELECT pg_size_pretty(pg_database_size(current_database()));")
             assert database_size
 
-            database_connections = await connection.fetchrow("SELECT count(*) FROM pg_stat_activity;")
-            assert database_connections
+            active_connections = await connection.fetchval(
+                """
+                SELECT active_connections FROM (
+                    SELECT count(pid) AS active_connections
+                    FROM pg_stat_activity
+                    WHERE state = 'active'
+                ) active_connections;
+                """
+            )
+            assert active_connections
 
         bot_uptime = discord.utils.format_dt(self.bot.uptime, style="R")
         database_uptime = discord.utils.format_dt(
-            discord.utils.utcnow() - timedelta(seconds=database_uptime['uptime']),
+            discord.utils.utcnow() - timedelta(seconds=database_uptime),
             style="R"
         )
 
@@ -146,24 +154,24 @@ class Info(commands.Cog):
         embed.set_author(name="Bot Info.")
         embed.add_field(
             name="Versions:",
-            value=f"**Python:** {python_version}\n**Discord.py:** {discord_version}\n**Database:** {database_version['version'][:16]}",
+            value=f"• **Python:** {python_version}\n• **Discord.py:** {discord_version}\n• **Database:** {database_version[:16]}",
             inline=False
         )
 
         embed.add_field(
             name="Uptime:",
-            value=f"**Bot**: {bot_uptime}\n**Database:** {database_uptime}",
+            value=f"• **Bot**: {bot_uptime}\n• **Database:** {database_uptime}",
             inline=False
         )
 
         embed.add_field(
             name="Database:",
-            value=f"**Size:** {database_size['pg_size_pretty']}\n**Connections:** {database_connections['count']}"
+            value=f"• **Size:** {database_size}\n• **Active Connections:** {active_connections}"
         )
 
         embed.add_field(
             name="Latency:",
-            value=f"**Websocket:** {round(self.bot.latency * 1000)}ms",
+            value=f"• **Websocket:** {round(self.bot.latency * 1000)}ms",
             inline=False
         )
 
