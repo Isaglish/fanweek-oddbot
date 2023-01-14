@@ -261,7 +261,6 @@ class Poll(commands.Cog):
             return None
 
         deadline = discord.utils.utcnow() + deadline
-
         options_dict = {self.emojis[i]: option for i, option in enumerate(options)}
 
         description = f"Poll deadline: {discord.utils.format_dt(deadline, style='F')}\n\n"
@@ -277,9 +276,13 @@ class Poll(commands.Cog):
         assert interaction.guild
         assert interaction.guild.icon
 
+        poll_view = PollView(self.bot, options_dict)
+
         embed.set_author(name=interaction.guild, icon_url=interaction.guild.icon.url)
-        message = await channel.send(embed=embed, view=PollView(self.bot, options_dict))
+        message = await channel.send(embed=embed, view=poll_view)
+
         embed.set_footer(text=f"Poll created by {interaction.user} • Poll ID: {message.id}")
+        await message.edit(embed=embed, view=poll_view)
 
         async with self.bot.pool.acquire() as connection:
             poll_id = await connection.fetchval(
