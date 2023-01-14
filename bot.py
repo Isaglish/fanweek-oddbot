@@ -138,8 +138,7 @@ class OddBot(commands.Bot):
 
         await self.load_extension("jishaku")
         await self.create_pool()
-
-        self.add_view(PollView(self))
+        await self.add_persistent_views()
 
     async def on_connect(self) -> None:
         self.log.info(f"Connected to Client (version: {discord.__version__}).")
@@ -155,7 +154,7 @@ class OddBot(commands.Bot):
         self.log.critical("Bot has disconnected!")
 
     async def create_pool(self) -> None:
-        pool = await asyncpg.create_pool(dsn=self.config["postgres_url"])
+        pool = await asyncpg.create_pool(dsn=self.config["supabase_url"])
         assert pool
         async with pool.acquire() as connection:
             query = """
@@ -192,6 +191,19 @@ class OddBot(commands.Bot):
             await connection.execute(query)
 
         self.pool = pool
+
+    async def add_persistent_views(self) -> None:
+        async with self.pool.acquire() as connection:
+            options = await connection.fetch(
+                """
+                SELECT poll_id, ARRAY_AGG(option_emoji) as option_emoji, ARRAY_AGG(option_text) as option_text
+                FROM poll_options
+                GROUP BY poll_id;
+                """
+            )
+            for _, option_emojis, option_texts in options:
+                options_dict = {emoji: text for emoji, text in zip(option_emojis, option_texts)}
+                self.add_view(PollView(self, options_dict))
         
 
 # ungrouped commands
