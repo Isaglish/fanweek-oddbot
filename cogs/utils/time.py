@@ -32,10 +32,7 @@ def str_to_timedelta(string: str) -> datetime.timedelta | None:
         return None
 
     parts = parts.groupdict()
-    parameters = {}
-    for time, amount in parts.items():
-        if amount:
-            parameters[time] = int(amount)
+    parameters = {time: int(amount) for time, amount in parts.items() if amount}
 
     if not parameters:
         return None
